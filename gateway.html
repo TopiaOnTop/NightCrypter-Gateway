@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIGHTCRYPTER GATEWAY</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #02040a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            perspective: 1000px; 
+        }
+
+        .bg-effects {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .noise-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+            z-index: 1;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 119, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 119, 255, 0.05) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+            z-index: 2;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(160px);
+            opacity: 0.25;
+            mix-blend-mode: screen;
+            z-index: 0;
+            animation: ambientPulse 10s ease-in-out infinite alternate;
+        }
+
+        .glow-1 {
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, #0055ff 0%, transparent 70%);
+            top: -400px;
+            right: -200px;
+        }
+
+        .glow-2 {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, #00f0ff 0%, transparent 70%);
+            bottom: -350px;
+            left: -150px;
+            animation-delay: -5s;
+        }
+
+        @keyframes ambientPulse {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.2; }
+            50% { transform: scale(1.08) translate(-20px, 20px); opacity: 0.3; }
+            100% { transform: scale(0.92) translate(20px, -20px); opacity: 0.15; }
+        }
+
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(0, 240, 255, 0.4);
+            border-radius: 50%;
+            animation: particleFloat linear infinite;
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+        }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(105vh) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 1; transform: translateY(90vh) translateX(15px) scale(1); }
+            90% { opacity: 0.7; }
+            100% { transform: translateY(-5vh) translateX(-15px) scale(0.3); opacity: 0; }
+        }
+
+        .particle:nth-child(1) { left: 12%; animation-duration: 14s; animation-delay: 0s; width: 2px; height: 2px; }
+        .particle:nth-child(2) { left: 25%; animation-duration: 18s; animation-delay: -3s; width: 4px; height: 4px; }
+        .particle:nth-child(3) { left: 40%; animation-duration: 12s; animation-delay: -5s; }
+        .particle:nth-child(4) { left: 55%; animation-duration: 16s; animation-delay: -1s; width: 2px; height: 2px; }
+        .particle:nth-child(5) { left: 70%; animation-duration: 15s; animation-delay: -4s; width: 4px; height: 4px; }
+        .particle:nth-child(6) { left: 85%; animation-duration: 19s; animation-delay: -2s; }
+        .particle:nth-child(7) { left: 93%; animation-duration: 13s; animation-delay: -7s; width: 2px; height: 2px; }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 460px;
+            padding: 20px;
+            opacity: 0;
+            transform: translateY(40px) scale(0.93) rotateX(10deg);
+            filter: blur(15px);
+            transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                        filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+        }
+
+        .login-container.ready {
+            opacity: 1;
+            transform: translateY(0) scale(1) rotateX(0deg);
+            filter: blur(0);
+        }
+
+        .login-box {
+            background: rgba(5, 9, 20, 0.75);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(0, 119, 255, 0.15);
+            border-radius: 24px;
+            padding: 42px 38px;
+            max-height: 94vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+                0 30px 60px -15px rgba(0, 0, 0, 0.85),
+                0 0 80px rgba(0, 119, 255, 0.05);
+            position: relative;
+            animation: borderGlow 5s ease-in-out infinite;
+            transform-style: preserve-3d;
+            transition: transform 0.2s ease-out;
+        }
+
+        .login-box::-webkit-scrollbar { display: none; }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.35), transparent);
+        }
+
+        .panel-logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            transform: translateZ(30px); 
+        }
+
+        .panel-logo {
+            font-size: 64px;
+            color: #00f0ff;
+            text-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+            animation: pulseIcon 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseIcon {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(0,240,255,0.4)); }
+            100% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(0,240,255,0.8)); }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+            transform: translateZ(20px);
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            background: linear-gradient(90deg, #fff 0%, #00f0ff 30%, #fff 60%, #0055ff 90%, #fff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            animation: titleShimmer 5s linear infinite;
+        }
+
+        .login-header p {
+            color: #4b5563;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        @keyframes titleShimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .status-container {
+            margin-bottom: 28px;
+            transform: translateZ(15px);
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border-radius: 30px;
+            margin-bottom: 12px;
+        }
+
+        .status-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-card.secured { border-color: rgba(0, 240, 255, 0.25); background: rgba(0, 240, 255, 0.01); }
+        .status-card.secured .status-indicator { background: rgba(0, 240, 255, 0.1); color: #00f0ff; box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
+        .status-card.secured .status-indicator .dot { background: #00f0ff; box-shadow: 0 0 10px #00f0ff; animation: pulseDot 1.5s infinite; }
+
+        .status-card.unsecured { border-color: rgba(239, 68, 68, 0.25); background: rgba(239, 68, 68, 0.01); }
+        .status-card.unsecured .status-indicator { background: rgba(239, 68, 68, 0.1); color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); }
+        .status-card.unsecured .status-indicator .dot { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+
+        @keyframes pulseDot {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .status-message {
+            font-size: 14px;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .onion-section {
+            margin-bottom: 24px;
+            transform: translateZ(25px);
+        }
+
+        .onion-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .address-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 12px 14px;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .address-box:focus-within {
+            border-color: rgba(0, 240, 255, 0.45);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.12);
+        }
+
+        .address-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #00f0ff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #9ca3af;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            color: #fff;
+            background: rgba(0, 119, 255, 0.2);
+            border-color: rgba(0, 240, 255, 0.4);
+        }
+
+        .action-container {
+            transform: translateZ(20px);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #0077ff 0%, #0055ff 100%);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 6px 20px rgba(0, 85, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 12px 30px rgba(0, 85, 255, 0.5);
+            background: linear-gradient(135deg, #0088ff 0%, #0066ff 100%);
+        }
+
+        .submit-btn.disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: #4b5563;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .message {
+            margin-bottom: 22px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .message.success { background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.2); color: #00f0ff; }
+
+        .license-buy-container {
+            margin-top: 30px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            transform: translateZ(10px);
+        }
+
+        .license-card {
+            background: rgba(0, 119, 255, 0.01);
+            border: 1px dashed rgba(0, 240, 255, 0.15);
+            border-radius: 16px;
+            padding: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .license-card h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #9ca3af;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .license-card p {
+            font-size: 11px;
+            color: #4b5563;
+            margin-bottom: 0;
+            line-height: 1.5;
+        }
+
+        
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #020408;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                        visibility 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            filter: blur(35px);
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-rings-wrap {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .loading-ring {
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            border: 1px dashed rgba(0, 240, 255, 0.08);
+            border-radius: 50%;
+            animation: ringSpin 12s linear infinite;
+        }
+        .loading-ring:nth-child(2) {
+            width: 320px;
+            height: 320px;
+            border: 1px solid rgba(0, 85, 255, 0.04);
+            animation-duration: 18s;
+            animation-direction: reverse;
+        }
+
+        @keyframes ringSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-logo {
+            position: relative;
+            margin-bottom: 30px;
+            z-index: 2;
+        }
+
+        .loading-logo-anim {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-logo-anim i {
+            font-size: 70px;
+            color: #00f0ff;
+            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.6));
+        }
+
+        .loading-glitch {
+            animation: screenGlitch 0.15s linear infinite;
+        }
+
+        @keyframes screenGlitch {
+            0% { transform: translate(0) skew(0); filter: hue-rotate(0deg); }
+            20% { transform: translate(-2px, 1px) skew(-1deg); }
+            40% { transform: translate(1px, -1px) skew(0deg); }
+            60% { transform: translate(-1px, 1px); filter: brightness(1.2); }
+            80% { transform: translate(1px, 1px) skew(1deg); }
+            100% { transform: translate(0) skew(0); }
+        }
+
+        .loading-title {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #090d16 0%, #0055ff 25%, #fff 50%, #00f0ff 75%, #090d16 100%);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: loadingShimmer 2.5s linear infinite;
+            margin-bottom: 32px;
+            text-indent: 12px;
+        }
+
+        @keyframes loadingShimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 300% center; }
+        }
+
+        .loading-bar-container {
+            width: 260px;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .loading-bar-container.show { opacity: 1; transform: translateY(0); }
+        
+        .loading-bar-track {
+            height: 2px; background: rgba(255, 255, 255, 0.04);
+            border-radius: 2px; overflow: hidden;
+        }
+
+        .loading-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #0055ff, #00f0ff);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.7);
+        }
+
+        .loading-bar-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px; letter-spacing: 2px;
+            color: rgba(0, 240, 255, 0.6); text-align: center; text-transform: uppercase;
+        }
+
+        .loading-logo-burst {
+            position: absolute; inset: -20px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,240,255,0.5) 0%, transparent 60%);
+            opacity: 0; pointer-events: none;
+        }
+        .loading-logo-burst.fire { animation: animBurst 0.75s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+        
+        @keyframes animBurst {
+            0%   { opacity: 1; transform: scale(0.35); }
+            100% { opacity: 0; transform: scale(1.6); }
+        }
+
+        .idle-float {
+            animation: logoFloat 4.5s ease-in-out infinite alternate;
+        }
+        @keyframes logoFloat {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-6px); }
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { border-color: rgba(0, 119, 255, 0.15); box-shadow: 0 0 80px rgba(0, 119, 255, 0.05); }
+            50% { border-color: rgba(0, 240, 255, 0.3); box-shadow: 0 0 100px rgba(0, 240, 255, 0.15); }
+        }
+
+        .login-box.success-redirect { animation: successPulse 0.6s ease forwards; }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); border-color: #00f0ff; box-shadow: 0 0 50px rgba(0, 240, 255, 0.4); }
+            100% { transform: scale(0.95); opacity: 0; filter: blur(12px); }
+        }
+    </style>
+</head>
+<body>
+
+    
+    <div class="bg-effects">
+        <div class="noise-overlay"></div>
+        <div class="grid-overlay"></div>
+        <div class="ambient-glow glow-1"></div>
+        <div class="ambient-glow glow-2"></div>
+    </div>
+
+    
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-rings-wrap">
+            <div class="loading-ring"></div>
+            <div class="loading-ring"></div>
+        </div>
+        
+        <div class="loading-logo idle-float">
+            <div class="loading-logo-anim loading-glitch">
+                <i class="fa-solid fa-circle-nodes"></i>
+            </div>
+            <div class="loading-logo-burst" id="logoBurst"></div>
+        </div>
+
+        <div class="loading-title">NightCrypter</div>
+        
+        <div class="loading-bar-container" id="loadingBarContainer">
+            <div class="loading-bar-track">
+                <div class="loading-bar-fill" id="loadingBarFill"></div>
+            </div>
+            <div class="loading-bar-label" id="loadingBarLabel">Securing network handshake...</div>
+        </div>
+    </div>
+
+    
+    <div class="login-container" id="mainContainer">
+        <div class="login-box" id="cardBox">
+            
+            <div class="panel-logo-container">
+                <i class="fa-solid fa-shield-halved panel-logo"></i>
+            </div>
+
+            <div class="login-header">
+                <h1>NightCrypter</h1>
+                <p>Tor Onion Gateway</p>
+            </div>
+
+            <div class="message id="notificationBox""></div>
+
+            
+            <div class="status-container">
+                <div class="status-card unsecured" id="statusCard">
+                    <div class="status-indicator">
+                        <span class="dot"></span>
+                        <span id="statusLabel">Checking Connection</span>
+                    </div>
+                    <div class="status-message" id="statusDesc">
+                        Initializing cryptographic system check...
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="onion-section">
+                <label class="onion-label">Official Onion V3 Address</label>
+                <div class="address-box">
+                    <i class="fa-solid fa-circle-dot" style="color: #4b5563; font-size: 12px;"></i>
+                    <input type="text" id="onionUrl" value="http://nightcn6bqvewgrwtdnyh2cuvhb5sce2kh66x7idkc3bipactsqkcnid.onion" readonly>
+                    <button class="copy-btn" id="copyBtn" title="Copy Address">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            
+            <div class="action-container">
+                <a href="http://nightcn6bqvewgrwtdnyh2cuvhb5sce2kh66x7idkc3bipactsqkcnid.onion" class="submit-btn disabled" id="gateBtn">
+                    <span>Access Portal</span>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </a>
+            </div>
+
+            
+            <div class="license-buy-container">
+                <div class="license-card">
+                    <h3>Security Layer Enabled</h3>
+                    <p>Always verify you are browsing through Tor Browser before proceeding.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const loadingScreen = document.getElementById("loadingScreen");
+            const loadingBarContainer = document.getElementById("loadingBarContainer");
+            const loadingBarFill = document.getElementById("loadingBarFill");
+            const loadingBarLabel = document.getElementById("loadingBarLabel");
+            const logoBurst = document.getElementById("logoBurst");
+            const mainContainer = document.getElementById("mainContainer");
+            
+            const statusCard = document.getElementById("statusCard");
+            const statusLabel = document.getElementById("statusLabel");
+            const statusDesc = document.getElementById("statusDesc");
+            const gateBtn = document.getElementById("gateBtn");
+            const copyBtn = document.getElementById("copyBtn");
+            const onionUrl = document.getElementById("onionUrl");
+            const cardBox = document.getElementById("cardBox");
+
+            
+            setTimeout(() => {
+                loadingBarContainer.classList.add("show");
+                startLoadingSequence();
+            }, 400);
+
+            function startLoadingSequence() {
+                let progress = 0;
+                const steps = [
+                    { p: 25, l: "Scanning your browser..." },
+                    { p: 55, l: "Fetching latest link..." },
+                    { p: 85, l: "Almost done..." },
+                    { p: 100, l: "Completed." }
+                ];
+
+                let stepIdx = 0;
+                const interval = setInterval(() => {
+                    if (stepIdx < steps.length) {
+                        progress = steps[stepIdx].p;
+                        loadingBarFill.style.width = `${progress}%`;
+                        loadingBarLabel.textContent = steps[stepIdx].l;
+                        stepIdx++;
+                    } else {
+                        clearInterval(interval);
+                        triggerBurstAndSwitch();
+                    }
+                }, 600);
+            }
+
+            function triggerBurstAndSwitch() {
+                logoBurst.classList.add("fire");
+                setTimeout(() => {
+                    loadingScreen.classList.add("hidden");
+                    mainContainer.classList.add("ready");
+                    checkTorNetwork();
+                }, 500);
+            }
+
+            
+            function checkTorNetwork() {
+                
+                const isOnionDomain = window.location.hostname.endsWith('.onion');
+                const isTorBrowser = navigator.userAgent.includes("TorBrowser") || isOnionDomain;
+
+                if (isTorBrowser) {
+                    
+                    statusCard.className = "status-card secured";
+                    statusLabel.textContent = "Tor Network Active";
+                    statusDesc.innerHTML = "Your connection is fully end-to-end encrypted.<br>Safe access to the portal granted.";
+                    
+                    gateBtn.classList.remove("disabled");
+                    gateBtn.innerHTML = `<span>Enter NightCrypter</span><i class="fa-solid fa-unlock-keyhole"></i>`;
+                } else {
+                    
+                    statusCard.className = "status-card unsecured";
+                    statusLabel.textContent = "Tor Hidden";
+                    statusDesc.innerHTML = "You are currently browsing via the standard web.<br>Launch Tor Browser to open this node safely.";
+                    
+                    gateBtn.classList.remove("disabled");
+                    gateBtn.href = "https://www.torproject.org/download/";
+                    gateBtn.target = "_blank";
+                    gateBtn.innerHTML = `<span>Get Tor Browser</span><i class="fa-solid fa-download"></i>`;
+                }
+            }
+
+            
+            mainContainer.addEventListener("mousemove", (e) => {
+                const rect = mainContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left - (rect.width / 2);
+                const y = e.clientY - rect.top - (rect.height / 2);
+                
+                
+                const rotateX = -(y / rect.height) * 16; 
+                const rotateY = (x / rect.width) * 16;
+                
+                cardBox.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            mainContainer.addEventListener("mouseleave", () => {
+                cardBox.style.transform = "rotateX(0deg) rotateY(0deg)";
+            });
+
+            
+            copyBtn.addEventListener("click", () => {
+                onionUrl.select();
+                onionUrl.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(onionUrl.value);
+
+                const origIcon = copyBtn.innerHTML;
+                copyBtn.innerHTML = `<i class="fa-solid fa-check" style="color: #00f0ff;"></i>`;
+                setTimeout(() => { copyBtn.innerHTML = origIcon; }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
