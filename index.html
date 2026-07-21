@@ -3,14 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NIGHTCRYPTER GATEWAY</title>
-    <link rel="icon" type="image/png" href="icon.png">
+    <title>Oblivion OS Monolith</title>
+
+    <!-- Professional Cyber Styling and Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
+    <!-- Core Animation and Term CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+
     <style>
+        :root {
+            --bg-primary: #0A192F;
+            --bg-secondary: #0D1B2A;
+            --border-neon: rgba(0, 240, 255, 0.15);
+            --cyan: #00f0ff;
+            --darkblue: #0055ff;
+            --text-primary: #ffffff;
+            --text-muted: #9ca3af;
+            --font-primary: 'Space Grotesk', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,802 +36,1325 @@
         }
 
         body {
-            font-family: 'Space Grotesk', sans-serif;
-            background: #02040a;
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: var(--font-primary);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             overflow: hidden;
-            perspective: 1000px; 
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
         }
 
-        .bg-effects {
+        /* Ambient glowing circles */
+        .ambient-mesh {
             position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .noise-overlay {
-            position: absolute;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
-            z-index: 1;
-        }
-
-        .grid-overlay {
-            position: absolute;
             inset: 0;
             background-image:
-                linear-gradient(rgba(0, 119, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 119, 255, 0.05) 1px, transparent 1px);
-            background-size: 44px 44px;
-            mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
-            z-index: 2;
-        }
-
-        .ambient-glow {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(160px);
-            opacity: 0.25;
-            mix-blend-mode: screen;
-            z-index: 0;
-            animation: ambientPulse 10s ease-in-out infinite alternate;
-        }
-
-        .glow-1 {
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, #0055ff 0%, transparent 70%);
-            top: -400px;
-            right: -200px;
-        }
-
-        .glow-2 {
-            width: 700px;
-            height: 700px;
-            background: radial-gradient(circle, #00f0ff 0%, transparent 70%);
-            bottom: -350px;
-            left: -150px;
-            animation-delay: -5s;
-        }
-
-        @keyframes ambientPulse {
-            0% { transform: scale(1) translate(0, 0); opacity: 0.2; }
-            50% { transform: scale(1.08) translate(-20px, 20px); opacity: 0.3; }
-            100% { transform: scale(0.92) translate(20px, -20px); opacity: 0.15; }
-        }
-
-        .particles {
-            position: fixed;
-            inset: 0;
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
             z-index: 0;
             pointer-events: none;
-            overflow: hidden;
         }
 
-        .particle {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: rgba(0, 240, 255, 0.4);
+        .glow-sphere {
+            position: fixed;
             border-radius: 50%;
-            animation: particleFloat linear infinite;
-            box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+            filter: blur(140px);
+            opacity: 0.25;
+            z-index: 0;
+            pointer-events: none;
         }
 
-        @keyframes particleFloat {
-            0% { transform: translateY(105vh) translateX(0) scale(0); opacity: 0; }
-            10% { opacity: 1; transform: translateY(90vh) translateX(15px) scale(1); }
-            90% { opacity: 0.7; }
-            100% { transform: translateY(-5vh) translateX(-15px) scale(0.3); opacity: 0; }
+        .sphere-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--darkblue) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
         }
 
-        .particle:nth-child(1) { left: 12%; animation-duration: 14s; animation-delay: 0s; width: 2px; height: 2px; }
-        .particle:nth-child(2) { left: 25%; animation-duration: 18s; animation-delay: -3s; width: 4px; height: 4px; }
-        .particle:nth-child(3) { left: 40%; animation-duration: 12s; animation-delay: -5s; }
-        .particle:nth-child(4) { left: 55%; animation-duration: 16s; animation-delay: -1s; width: 2px; height: 2px; }
-        .particle:nth-child(5) { left: 70%; animation-duration: 15s; animation-delay: -4s; width: 4px; height: 4px; }
-        .particle:nth-child(6) { left: 85%; animation-duration: 19s; animation-delay: -2s; }
-        .particle:nth-child(7) { left: 93%; animation-duration: 13s; animation-delay: -7s; width: 2px; height: 2px; }
+        .sphere-2 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--cyan) 0%, transparent 70%);
+            bottom: -200px;
+            left: -100px;
+        }
 
-        .login-container {
+        /* 1. PROFESSIONAL INSULATED LOGIN SCREEN */
+        .login-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+        }
+
+        .login-card {
+            background: rgba(13, 27, 42, 0.85);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border-neon);
+            border-radius: 16px;
+            padding: 40px;
+            width: 440px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+
+        .login-shield {
+            font-size: 54px;
+            color: var(--cyan);
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.5));
+        }
+
+        .login-card h2 {
+            font-size: 24px;
+            letter-spacing: 4px;
+            margin-bottom: 6px;
+        }
+
+        .login-sub {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            text-transform: uppercase;
+        }
+
+        .input-group {
             position: relative;
-            z-index: 10;
-            width: 100%;
-            max-width: 460px;
-            padding: 20px;
-            opacity: 0;
-            transform: translateY(40px) scale(0.93) rotateX(10deg);
-            filter: blur(15px);
-            transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), 
-                        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), 
-                        filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-            transform-style: preserve-3d;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
         }
 
-        .login-container.ready {
-            opacity: 1;
-            transform: translateY(0) scale(1) rotateX(0deg);
-            filter: blur(0);
-        }
-
-        .login-box {
-            background: rgba(5, 9, 20, 0.75);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(0, 119, 255, 0.15);
-            border-radius: 24px;
-            padding: 42px 38px;
-            max-height: 94vh;
-            overflow-y: auto;
-            scrollbar-width: none;
-            box-shadow:
-                0 0 0 1px rgba(255, 255, 255, 0.02) inset,
-                0 30px 60px -15px rgba(0, 0, 0, 0.85),
-                0 0 80px rgba(0, 119, 255, 0.05);
-            position: relative;
-            animation: borderGlow 5s ease-in-out infinite;
-            transform-style: preserve-3d;
-            transition: transform 0.2s ease-out;
-        }
-
-        .login-box::-webkit-scrollbar { display: none; }
-
-        .login-box::before {
-            content: '';
+        .input-group i {
             position: absolute;
+            left: 16px;
+            color: var(--cyan);
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            outline: none;
+            font-family: var(--font-primary);
+        }
+
+        .input-group input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--darkblue), var(--cyan));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 20px rgba(0, 85, 255, 0.4);
+        }
+
+        /* 2. VIRTUAL DESKTOP WORKBENCH */
+        .desktop-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+        }
+
+        .menubar {
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.35), transparent);
+            width: 100vw;
+            height: 32px;
+            background: rgba(10, 25, 47, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 1000;
         }
 
-        .panel-logo-container {
+        .menubar-left, .menubar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .brand-logo { color: var(--cyan); }
+        .system-pill {
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            color: var(--cyan);
+            border-radius: 30px;
+            padding: 2px 8px;
+            font-size: 9px;
+            font-family: var(--font-mono);
+        }
+
+        .desktop-workbench {
+            position: absolute;
+            top: 32px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 32px);
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 90px);
+            grid-template-rows: repeat(auto-fill, 110px);
+            grid-auto-flow: column;
+            gap: 18px;
+        }
+
+        .desktop-shortcut {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 100px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .desktop-shortcut:hover {
+            background: rgba(0, 240, 255, 0.05);
+            border-color: rgba(0, 240, 255, 0.1);
+        }
+
+        .shortcut-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(10, 25, 47, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .shortcut-icon i {
+            font-size: 22px;
+            color: var(--cyan);
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.4));
+        }
+
+        .shortcut-label {
+            font-size: 10px;
+            font-weight: 500;
+            text-align: center;
+            word-wrap: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Centered Bottom Glassmorphism Dock */
+        .dock-container {
+            position: fixed;
+            bottom: 16px;
+            left: 0;
+            width: 100vw;
             display: flex;
             justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-            transform: translateZ(30px); 
+            z-index: 1000;
+            pointer-events: none;
         }
 
-        .panel-logo {
-            font-size: 64px;
-            color: #00f0ff;
-            text-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
-            animation: pulseIcon 3s ease-in-out infinite alternate;
-        }
-
-        @keyframes pulseIcon {
-            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(0,240,255,0.4)); }
-            100% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(0,240,255,0.8)); }
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-            transform: translateZ(20px);
-        }
-
-        .login-header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: 5px;
-            background: linear-gradient(90deg, #fff 0%, #00f0ff 30%, #fff 60%, #0055ff 90%, #fff 100%);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            animation: titleShimmer 5s linear infinite;
-        }
-
-        .login-header p {
-            color: #4b5563;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-        }
-
-        @keyframes titleShimmer {
-            0% { background-position: -200% center; }
-            100% { background-position: 200% center; }
-        }
-
-        .status-container {
-            margin-bottom: 28px;
-            transform: translateZ(15px);
-        }
-
-        .status-card {
-            background: rgba(255, 255, 255, 0.01);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            padding: 6px 16px;
-            border-radius: 30px;
-            margin-bottom: 12px;
-        }
-
-        .status-indicator .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-card.secured { border-color: rgba(0, 240, 255, 0.25); background: rgba(0, 240, 255, 0.01); }
-        .status-card.secured .status-indicator { background: rgba(0, 240, 255, 0.1); color: #00f0ff; box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
-        .status-card.secured .status-indicator .dot { background: #00f0ff; box-shadow: 0 0 10px #00f0ff; animation: pulseDot 1.5s infinite; }
-
-        .status-card.unsecured { border-color: rgba(239, 68, 68, 0.25); background: rgba(239, 68, 68, 0.01); }
-        .status-card.unsecured .status-indicator { background: rgba(239, 68, 68, 0.1); color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); }
-        .status-card.unsecured .status-indicator .dot { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
-
-        @keyframes pulseDot {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .status-message {
-            font-size: 14px;
-            color: #9ca3af;
-            line-height: 1.5;
-        }
-
-        .onion-section {
-            margin-bottom: 24px;
-            transform: translateZ(25px);
-        }
-
-        .onion-label {
-            display: block;
-            margin-bottom: 10px;
-            color: #6b7280;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-align: center;
-        }
-
-        .address-box {
+        .system-dock {
+            background: rgba(10, 25, 47, 0.4);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 8px 12px;
             display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.02);
+            align-items: flex-end;
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .dock-item-wrapper {
+            position: relative;
+        }
+
+        .dock-item {
+            width: 60px;
+            height: 60px;
+            background: rgba(10, 25, 47, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 14px;
-            padding: 12px 14px;
-            gap: 10px;
-            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: width 0.15s, height 0.15s, transform 0.15s;
+            transform-origin: bottom center;
         }
 
-        .address-box:focus-within {
-            border-color: rgba(0, 240, 255, 0.45);
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.12);
+        .dock-item i {
+            font-size: 24px;
+            color: var(--cyan);
+            filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
         }
 
-        .address-box input {
+        .dock-tooltip {
+            position: absolute;
+            bottom: calc(100% + 14px);
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: rgba(10, 25, 47, 0.95);
+            border: 1px solid var(--cyan);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            color: #fff;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .dock-item-wrapper:hover .dock-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .dock-dot {
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background-color: var(--cyan);
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .dock-item-wrapper.active .dock-dot {
+            opacity: 1;
+        }
+
+        /* 3. WINDOW CONTROLS WITH RED, ORANGE, GREEN ON LEFT */
+        .window-workbench {
+            position: absolute;
+            top: 32px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 32px);
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .os-window {
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-neon);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+        }
+
+        .window-titlebar {
+            height: 38px;
+            background: #0A192F;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            position: relative;
+            cursor: move;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            position: absolute;
+            left: 14px;
+        }
+
+        .win-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+        }
+
+        .win-close { background-color: #ff5f56; }
+        .win-max { background-color: #ffbd2e; }
+        .win-min { background-color: #27c93f; }
+
+        .window-title-txt {
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .window-body {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: #0D1B2A;
+            display: flex;
+        }
+
+        /* 4. APPLICATION WINDOW SPECIFICS */
+        .terminal-box {
+            width: 100%;
+            height: 100%;
+            background: #020617;
+            padding: 10px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--cyan);
+            overflow-y: auto;
+        }
+
+        .terminal-input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terminal-prompt {
+            color: var(--cyan);
+            font-weight: 700;
+        }
+
+        .terminal-input-field {
             flex: 1;
             background: transparent;
             border: none;
             outline: none;
-            color: #00f0ff;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .copy-btn {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #9ca3af;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .copy-btn:hover {
             color: #fff;
-            background: rgba(0, 119, 255, 0.2);
-            border-color: rgba(0, 240, 255, 0.4);
-        }
-
-        .action-container {
-            transform: translateZ(20px);
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 16px 24px;
-            background: linear-gradient(135deg, #0077ff 0%, #0055ff 100%);
-            border: none;
-            border-radius: 14px;
-            color: #fff;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 6px 20px rgba(0, 85, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 12px 30px rgba(0, 85, 255, 0.5);
-            background: linear-gradient(135deg, #0088ff 0%, #0066ff 100%);
-        }
-
-        .submit-btn.disabled {
-            background: rgba(255, 255, 255, 0.05);
-            color: #4b5563;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: none;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .message {
-            margin-bottom: 22px;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 500;
-            display: none;
-            text-align: center;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .message.success { background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.2); color: #00f0ff; }
-
-        .license-buy-container {
-            margin-top: 30px;
-            padding-top: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            text-align: center;
-            transform: translateZ(10px);
-        }
-
-        .license-card {
-            background: rgba(0, 119, 255, 0.01);
-            border: 1px dashed rgba(0, 240, 255, 0.15);
-            border-radius: 16px;
-            padding: 18px;
-            transition: all 0.3s ease;
-        }
-
-        .license-card h3 {
+            font-family: var(--font-mono);
             font-size: 12px;
-            font-weight: 600;
-            color: #9ca3af;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 6px;
         }
 
-        .license-card p {
-            font-size: 11px;
-            color: #4b5563;
-            margin-bottom: 0;
-            line-height: 1.5;
-        }
-
-        
-        .loading-screen {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: #020408;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
-                        visibility 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-                        filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .loading-screen.hidden {
-            opacity: 0;
-            filter: blur(35px);
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .loading-rings-wrap {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-        }
-
-        .loading-ring {
-            position: absolute;
-            width: 240px;
-            height: 240px;
-            border: 1px dashed rgba(0, 240, 255, 0.08);
-            border-radius: 50%;
-            animation: ringSpin 12s linear infinite;
-        }
-        .loading-ring:nth-child(2) {
-            width: 320px;
-            height: 320px;
-            border: 1px solid rgba(0, 85, 255, 0.04);
-            animation-duration: 18s;
-            animation-direction: reverse;
-        }
-
-        @keyframes ringSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-logo {
-            position: relative;
-            margin-bottom: 30px;
-            z-index: 2;
-        }
-
-        .loading-logo-anim {
-            width: 100px;
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .loading-logo-anim i {
-            font-size: 70px;
-            color: #00f0ff;
-            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.6));
-        }
-
-        .loading-glitch {
-            animation: screenGlitch 0.15s linear infinite;
-        }
-
-        @keyframes screenGlitch {
-            0% { transform: translate(0) skew(0); filter: hue-rotate(0deg); }
-            20% { transform: translate(-2px, 1px) skew(-1deg); }
-            40% { transform: translate(1px, -1px) skew(0deg); }
-            60% { transform: translate(-1px, 1px); filter: brightness(1.2); }
-            80% { transform: translate(1px, 1px) skew(1deg); }
-            100% { transform: translate(0) skew(0); }
-        }
-
-        .loading-title {
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: 12px;
-            text-transform: uppercase;
-            background: linear-gradient(90deg, #090d16 0%, #0055ff 25%, #fff 50%, #00f0ff 75%, #090d16 100%);
-            background-size: 300% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: loadingShimmer 2.5s linear infinite;
-            margin-bottom: 32px;
-            text-indent: 12px;
-        }
-
-        @keyframes loadingShimmer {
-            0% { background-position: 0% center; }
-            100% { background-position: 300% center; }
-        }
-
-        .loading-bar-container {
-            width: 260px;
-            opacity: 0;
-            transform: translateY(15px);
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        /* File manager paths */
+        .sidebar-nav {
+            width: 200px;
+            background: #0A192F;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 16px 0;
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
-        .loading-bar-container.show { opacity: 1; transform: translateY(0); }
-        
-        .loading-bar-track {
-            height: 2px; background: rgba(255, 255, 255, 0.04);
-            border-radius: 2px; overflow: hidden;
+
+        .sidebar-header {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            padding: 0 16px;
+            margin-bottom: 8px;
         }
 
-        .loading-bar-fill {
-            height: 100%; width: 0%;
-            background: linear-gradient(90deg, #0055ff, #00f0ff);
-            box-shadow: 0 0 12px rgba(0, 240, 255, 0.7);
+        .sidebar-item {
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .loading-bar-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 9px; letter-spacing: 2px;
-            color: rgba(0, 240, 255, 0.6); text-align: center; text-transform: uppercase;
+        .sidebar-item:hover, .sidebar-item.active {
+            background: rgba(0, 240, 255, 0.06);
+            color: var(--cyan);
         }
 
-        .loading-logo-burst {
-            position: absolute; inset: -20px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(0,240,255,0.5) 0%, transparent 60%);
-            opacity: 0; pointer-events: none;
-        }
-        .loading-logo-burst.fire { animation: animBurst 0.75s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
-        
-        @keyframes animBurst {
-            0%   { opacity: 1; transform: scale(0.35); }
-            100% { opacity: 0; transform: scale(1.6); }
+        .file-grid {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 75px);
+            grid-template-rows: repeat(auto-fill, 85px);
+            gap: 16px;
+            overflow-y: auto;
         }
 
-        .idle-float {
-            animation: logoFloat 4.5s ease-in-out infinite alternate;
-        }
-        @keyframes logoFloat {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-6px); }
-        }
-
-        @keyframes borderGlow {
-            0%, 100% { border-color: rgba(0, 119, 255, 0.15); box-shadow: 0 0 80px rgba(0, 119, 255, 0.05); }
-            50% { border-color: rgba(0, 240, 255, 0.3); box-shadow: 0 0 100px rgba(0, 240, 255, 0.15); }
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80px;
+            cursor: pointer;
+            border-radius: 6px;
+            border: 1px solid transparent;
         }
 
-        .login-box.success-redirect { animation: successPulse 0.6s ease forwards; }
+        .file-item:hover {
+            background: rgba(0, 240, 255, 0.04);
+            border-color: rgba(0, 240, 255, 0.1);
+        }
 
-        @keyframes successPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); border-color: #00f0ff; box-shadow: 0 0 50px rgba(0, 240, 255, 0.4); }
-            100% { transform: scale(0.95); opacity: 0; filter: blur(12px); }
+        .file-item i {
+            font-size: 26px;
+            color: var(--cyan);
+            margin-bottom: 6px;
+        }
+
+        .file-name {
+            font-size: 10px;
+            text-align: center;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Integrated Tor Onion Browser */
+        .browser-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .browser-toolbar {
+            height: 42px;
+            background: #0A192F;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 12px;
+        }
+
+        .browser-url-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 6px;
+            color: #fff;
+            padding: 6px 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            outline: none;
+        }
+
+        .browser-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: #fff;
+        }
+
+        /* Tool Tabs and Configurations */
+        .tool-viewport {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .tool-header {
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tool-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tool-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .tool-btn {
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 6px;
+            padding: 10px 18px;
+            color: #fff;
+            font-family: var(--font-primary);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: rgba(0, 240, 255, 0.12);
+            border-color: var(--cyan);
+        }
+
+        .tool-textarea {
+            width: 100%;
+            height: 110px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 12px;
+            resize: none;
+            outline: none;
+        }
+
+        /* Generic Utilities */
+        .hidden { display: none !important; }
+        .text-cyan { color: var(--cyan) !important; }
+        .flex-col { display: flex; flex-direction: column; }
+        .flex-row { display: flex; flex-direction: row; }
+
+        /* Custom Dialog Alert Overlay */
+        .custom-dialog-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 9, 20, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-dialog {
+            background: var(--bg-secondary);
+            border: 1px solid var(--cyan);
+            border-radius: 12px;
+            width: 380px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        .dialog-header {
+            height: 45px;
+            background: #0A192F;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .dialog-body {
+            padding: 24px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .dialog-footer {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: flex-end;
         }
     </style>
 </head>
 <body>
 
-    
-    <div class="bg-effects">
-        <div class="noise-overlay"></div>
-        <div class="grid-overlay"></div>
-        <div class="ambient-glow glow-1"></div>
-        <div class="ambient-glow glow-2"></div>
-    </div>
+    <!-- BACKGROUND MESHS -->
+    <div class="ambient-mesh"></div>
+    <div class="glow-sphere sphere-1"></div>
+    <div class="glow-sphere sphere-2"></div>
 
-    
-    <div class="particles">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
-    
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-rings-wrap">
-            <div class="loading-ring"></div>
-            <div class="loading-ring"></div>
-        </div>
-        
-        <div class="loading-logo idle-float">
-            <div class="loading-logo-anim loading-glitch">
-                <i class="fa-solid fa-circle-nodes"></i>
+    <!-- 1. AUTHENTICATION SHIELD -->
+    <div id="loginLayer" class="login-layer">
+        <div class="login-card">
+            <div class="login-shield">
+                <i class="fa-solid fa-lock"></i>
             </div>
-            <div class="loading-logo-burst" id="logoBurst"></div>
-        </div>
+            <h2>OBLIVION SECURE</h2>
+            <p class="login-sub">INSULATED WORKSPACE GATEWAY</p>
 
-        <div class="loading-title">NightCrypter</div>
-        
-        <div class="loading-bar-container" id="loadingBarContainer">
-            <div class="loading-bar-track">
-                <div class="loading-bar-fill" id="loadingBarFill"></div>
+            <div class="input-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="usernameInput" placeholder="Authorized User" autocomplete="off">
             </div>
-            <div class="loading-bar-label" id="loadingBarLabel">Securing network handshake...</div>
+            <div class="input-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" id="passwordInput" placeholder="Symmetric Key" autocomplete="off">
+            </div>
+
+            <button class="login-btn" onclick="OS.handleAuthentication()">INITIALIZE SECURE ACCESS</button>
         </div>
     </div>
 
-    
-    <div class="login-container" id="mainContainer">
-        <div class="login-box" id="cardBox">
-            
-            <div class="panel-logo-container">
-                <i class="fa-solid fa-shield-halved panel-logo"></i>
+    <!-- 2. VIRTUAL DESKTOP ENGINE -->
+    <div id="desktopLayer" class="desktop-layer hidden">
+        <header class="menubar">
+            <div class="menubar-left">
+                <i class="fa-solid fa-shield brand-logo"></i>
+                <span>OBLIVION INSULATED OS</span>
+                <span class="system-pill">TOR ROUTED MODE</span>
             </div>
-
-            <div class="login-header">
-                <h1>NightCrypter</h1>
-                <p>Tor Onion Gateway</p>
+            <div class="menubar-right">
+                <span id="menubarMetrics">CPU: 0% | RAM: 0%</span>
+                <span class="system-pill">AES-256 VAULT ACTIVE</span>
             </div>
+        </header>
 
-            <div class="message id="notificationBox""></div>
+        <!-- Grid shortcuts area -->
+        <main class="desktop-workbench" id="desktopWorkbench">
+            <!-- Shortcut cards rendering dynamically -->
+        </main>
 
-            
-            <div class="status-container">
-                <div class="status-card unsecured" id="statusCard">
-                    <div class="status-indicator">
-                        <span class="dot"></span>
-                        <span id="statusLabel">Checking Connection</span>
+        <!-- Dock launchers -->
+        <footer class="dock-container">
+            <div class="system-dock" id="systemDock">
+                <!-- Dock items populated dynamically -->
+            </div>
+        </footer>
+
+        <!-- Application Layer Frames -->
+        <div id="windowWorkbench" class="window-workbench">
+
+            <!-- A. LIVE TERMINAL EMULATOR -->
+            <div id="winTerminal" class="os-window hidden" style="width: 750px; height: 450px; top: 10%; left: 15%;">
+                <div class="window-titlebar">
+                    <div class="window-controls">
+                        <button class="win-btn win-close" onclick="OS.closeWindow('winTerminal')"></button>
+                        <button class="win-btn win-max" onclick="OS.maximizeWindow('winTerminal')"></button>
+                        <button class="win-btn win-min" onclick="OS.minimizeWindow('winTerminal', 'dock-winTerminal')"></button>
                     </div>
-                    <div class="status-message" id="statusDesc">
-                        Initializing cryptographic system check...
+                    <div class="window-title-txt">
+                        <i class="fa-solid fa-terminal text-cyan"></i>
+                        <span>Insulated Shell Emulator</span>
+                    </div>
+                </div>
+                <div class="window-body">
+                    <div class="terminal-box" id="terminalBox">
+                        <div id="terminalOutput"></div>
+                        <div class="terminal-input-row">
+                            <span class="terminal-prompt">oblivion_os:~$</span>
+                            <input type="text" id="terminalInputField" class="terminal-input-field" autocomplete="off">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            
-            <div class="onion-section">
-                <label class="onion-label">Official Onion V3 Address</label>
-                <div class="address-box">
-                    <i class="fa-solid fa-circle-dot" style="color: #4b5563; font-size: 12px;"></i>
-                    <input type="text" id="onionUrl" value="http://nightcn6bqvewgrwtdnyh2cuvhb5sce2kh66x7idkc3bipactsqkcnid.onion" readonly>
-                    <button class="copy-btn" id="copyBtn" title="Copy Address">
-                        <i class="fa-regular fa-copy"></i>
-                    </button>
+            <!-- B. SYSTEM FILE MANAGER -->
+            <div id="winFileManager" class="os-window hidden" style="width: 800px; height: 480px; top: 12%; left: 18%;">
+                <div class="window-titlebar">
+                    <div class="window-controls">
+                        <button class="win-btn win-close" onclick="OS.closeWindow('winFileManager')"></button>
+                        <button class="win-btn win-max" onclick="OS.maximizeWindow('winFileManager')"></button>
+                        <button class="win-btn win-min" onclick="OS.minimizeWindow('winFileManager', 'dock-winFileManager')"></button>
+                    </div>
+                    <div class="window-title-txt">
+                        <i class="fa-solid fa-folder text-cyan"></i>
+                        <span>Secure File Manager</span>
+                    </div>
+                </div>
+                <div class="window-body flex-row">
+                    <aside class="sidebar-nav">
+                        <div class="sidebar-header">QUICK ACCESS</div>
+                        <div class="sidebar-item active" onclick="OS.loadDirectory('home')">
+                            <i class="fa-solid fa-house"></i>
+                            <span>Home Dir</span>
+                        </div>
+                        <div class="sidebar-item" onclick="OS.loadDirectory('desktop')">
+                            <i class="fa-solid fa-desktop"></i>
+                            <span>Desktop</span>
+                        </div>
+                    </aside>
+                    <div class="flex-col" style="flex: 1;">
+                        <div style="padding: 10px 16px; background: #0A192F; font-size: 10px; color: var(--cyan);" id="fmPathDisplay">/root</div>
+                        <div class="file-grid" id="fileManagerGrid"></div>
+                    </div>
                 </div>
             </div>
 
-            
-            <div class="action-container">
-                <a href="http://nightcn6bqvewgrwtdnyh2cuvhb5sce2kh66x7idkc3bipactsqkcnid.onion" class="submit-btn disabled" id="gateBtn">
-                    <span>Access Portal</span>
-                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                </a>
+            <!-- C. INTEGRATED TOR WEB BROWSER -->
+            <div id="winBrowser" class="os-window hidden" style="width: 850px; height: 550px; top: 8%; left: 20%;">
+                <div class="window-titlebar">
+                    <div class="window-controls">
+                        <button class="win-btn win-close" onclick="OS.closeWindow('winBrowser')"></button>
+                        <button class="win-btn win-max" onclick="OS.maximizeWindow('winBrowser')"></button>
+                        <button class="win-btn win-min" onclick="OS.minimizeWindow('winBrowser', 'dock-winBrowser')"></button>
+                    </div>
+                    <div class="window-title-txt">
+                        <i class="fa-solid fa-globe text-cyan"></i>
+                        <span>Tor Onion Web Browser</span>
+                    </div>
+                </div>
+                <div class="window-body">
+                    <div class="browser-container">
+                        <div class="browser-toolbar">
+                            <button class="tool-btn" style="padding: 5px 10px;" onclick="OS.reloadBrowser()"><i class="fa-solid fa-rotate-right"></i></button>
+                            <input type="text" id="browserUrlField" class="browser-url-input" value="https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion">
+                            <button class="tool-btn" style="padding: 5px 15px;" onclick="OS.navigateBrowser()">Go</button>
+                        </div>
+                        <iframe id="browserIframe" class="browser-iframe" src="https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion"></iframe>
+                    </div>
+                </div>
             </div>
 
-            
-            <div class="license-buy-container">
-                <div class="license-card">
-                    <h3>Security Layer Enabled</h3>
-                    <p>Always verify you are browsing through Tor Browser before proceeding.</p>
+            <!-- D. MONERO CRYPTO WALLET -->
+            <div id="winWallet" class="os-window hidden" style="width: 550px; height: 420px; top: 15%; left: 25%;">
+                <div class="window-titlebar">
+                    <div class="window-controls">
+                        <button class="win-btn win-close" onclick="OS.closeWindow('winWallet')"></button>
+                        <button class="win-btn win-max" onclick="OS.maximizeWindow('winWallet')"></button>
+                        <button class="win-btn win-min" onclick="OS.minimizeWindow('winWallet', 'dock-winWallet')"></button>
+                    </div>
+                    <div class="window-title-txt">
+                        <i class="fa-solid fa-wallet text-cyan"></i>
+                        <span>Monero Wallet Sandbox</span>
+                    </div>
+                </div>
+                <div class="window-body tool-viewport flex-col">
+                    <div class="tool-header">XMR Core Keys Manager</div>
+                    <div class="tool-group">
+                        <button class="tool-btn" onclick="OS.generateXmrKeys()">Generate P2P Crypto Keys</button>
+                    </div>
+                    <div class="tool-group">
+                        <label>Symmetric Mnemonic Seed Phrase</label>
+                        <textarea id="xmrSeedPhrase" class="tool-textarea" readonly></textarea>
+                    </div>
+                    <div class="tool-group">
+                        <label>Monero Public Address</label>
+                        <textarea id="xmrAddress" class="tool-textarea" style="height: 60px;" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- E. PGP CRYPTO BOX -->
+            <div id="winPgp" class="os-window hidden" style="width: 600px; height: 480px; top: 14%; left: 22%;">
+                <div class="window-titlebar">
+                    <div class="window-controls">
+                        <button class="win-btn win-close" onclick="OS.closeWindow('winPgp')"></button>
+                        <button class="win-btn win-max" onclick="OS.maximizeWindow('winPgp')"></button>
+                        <button class="win-btn win-min" onclick="OS.minimizeWindow('winPgp', 'dock-winPgp')"></button>
+                    </div>
+                    <div class="window-title-txt">
+                        <i class="fa-solid fa-envelope text-cyan"></i>
+                        <span>PGP Mail Crypto Sandbox</span>
+                    </div>
+                </div>
+                <div class="window-body tool-viewport flex-col">
+                    <div class="tool-header">Asymmetric Encryption Tool</div>
+                    <div class="tool-group flex-row">
+                        <button class="tool-btn" onclick="OS.generatePgpKeys()">Generate RSA-2048 Keypair</button>
+                    </div>
+                    <div class="tool-group">
+                        <label>Original / Decrypted Plain Text</label>
+                        <input type="text" id="pgpInputText" class="browser-url-input" style="padding: 10px;" placeholder="Message to encrypt...">
+                    </div>
+                    <div class="tool-group flex-row">
+                        <button class="tool-btn" style="flex: 1;" onclick="OS.pgpEncryptText()">Encrypt Text</button>
+                        <button class="tool-btn" style="flex: 1;" onclick="OS.pgpDecryptText()">Decrypt Text</button>
+                    </div>
+                    <div class="tool-group">
+                        <label>Insulated Hex Ciphertext Output</label>
+                        <textarea id="pgpCipherText" class="tool-textarea" placeholder="Ciphertext hex stream output..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- F. SECURE AES-256 VAULT MANAGER -->
+            <div id="winVault" class="os-window hidden" style="width: 650px; height: 460px; top: 12%; left: 24%;">
+                <div class="window-titlebar">
+                    <div class="window-controls">
+                        <button class="win-btn win-close" onclick="OS.closeWindow('winVault')"></button>
+                        <button class="win-btn win-max" onclick="OS.maximizeWindow('winVault')"></button>
+                        <button class="win-btn win-min" onclick="OS.minimizeWindow('winVault', 'dock-winVault')"></button>
+                    </div>
+                    <div class="window-title-txt">
+                        <i class="fa-solid fa-vault text-cyan"></i>
+                        <span>AES-256 GCM Secure Vault</span>
+                    </div>
+                </div>
+                <div class="window-body tool-viewport flex-col">
+                    <div class="tool-header">Symmetric Crypto Insulated Storage</div>
+                    <p class="login-sub" style="margin-bottom: 14px; text-align: left;">Symmetrically encrypt disk resources into insulated secure containers.</p>
+
+                    <div class="tool-group">
+                        <label>Source Absolute Disk File Path</label>
+                        <input type="text" id="vaultSrcPath" class="browser-url-input" style="padding: 10px;" placeholder="e.g. C:\Users\Admin\secrets.txt">
+                    </div>
+                    <div class="tool-group flex-row">
+                        <button class="tool-btn" style="flex: 1;" onclick="OS.vaultEncryptFile()"><i class="fa-solid fa-lock"></i> Encrypt to Vault</button>
+                        <button class="tool-btn" style="flex: 1;" onclick="OS.vaultDecryptFile()"><i class="fa-solid fa-unlock"></i> Decrypt & Restore</button>
+                    </div>
+                    <div class="tool-group">
+                        <label>Vault Target Directory Path</label>
+                        <input type="text" id="vaultDestPath" class="browser-url-input" style="padding: 10px;" placeholder="e.g. /home/jules/.vault">
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 
+    <!-- 3. CUSTOM SYSTEM WARNING MESSAGE OVERLAYS (NO ALERTS) -->
+    <div id="dialogOverlay" class="custom-dialog-overlay hidden">
+        <div class="custom-dialog">
+            <div class="dialog-header">
+                <i class="fa-solid fa-triangle-exclamation text-cyan" style="margin-right: 8px;"></i>
+                <span id="dialogTitle">SYSTEM MESSAGE</span>
+            </div>
+            <div class="dialog-body" id="dialogMessage">Alert message details.</div>
+            <div class="dialog-footer">
+                <button class="tool-btn" onclick="OS.closeDialog()">Acknowledge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. CORE STATE SCRIPT ENGINE -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const loadingScreen = document.getElementById("loadingScreen");
-            const loadingBarContainer = document.getElementById("loadingBarContainer");
-            const loadingBarFill = document.getElementById("loadingBarFill");
-            const loadingBarLabel = document.getElementById("loadingBarLabel");
-            const logoBurst = document.getElementById("logoBurst");
-            const mainContainer = document.getElementById("mainContainer");
-            
-            const statusCard = document.getElementById("statusCard");
-            const statusLabel = document.getElementById("statusLabel");
-            const statusDesc = document.getElementById("statusDesc");
-            const gateBtn = document.getElementById("gateBtn");
-            const copyBtn = document.getElementById("copyBtn");
-            const onionUrl = document.getElementById("onionUrl");
-            const cardBox = document.getElementById("cardBox");
+        const SYSTEM_APPS = [
+            { id: "winTerminal", title: "Shell Terminal", icon: "fa-solid fa-terminal" },
+            { id: "winFileManager", title: "File Manager", icon: "fa-solid fa-folder" },
+            { id: "winBrowser", title: "Tor Browser", icon: "fa-solid fa-globe" },
+            { id: "winWallet", title: "XMR Wallet", icon: "fa-solid fa-wallet" },
+            { id: "winPgp", title: "PGP Sandbox", icon: "fa-solid fa-envelope" },
+            { id: "winVault", title: "Secure Vault", icon: "fa-solid fa-vault" }
+        ];
 
-            
-            setTimeout(() => {
-                loadingBarContainer.classList.add("show");
-                startLoadingSequence();
-            }, 400);
+        const OS = {
+            windowLayers: [],
+            focusedWindow: null,
+            currentDirPath: "",
+            homeDirPath: "",
 
-            function startLoadingSequence() {
-                let progress = 0;
-                const steps = [
-                    { p: 25, l: "Scanning your browser..." },
-                    { p: 55, l: "Fetching latest link..." },
-                    { p: 85, l: "Almost done..." },
-                    { p: 100, l: "Completed." }
-                ];
+            init() {
+                this.renderShortcutsAndDock();
+                this.initTerminal();
+                this.initSystemMetrics();
+                this.initWindowDragging();
 
-                let stepIdx = 0;
-                const interval = setInterval(() => {
-                    if (stepIdx < steps.length) {
-                        progress = steps[stepIdx].p;
-                        loadingBarFill.style.width = `${progress}%`;
-                        loadingBarLabel.textContent = steps[stepIdx].l;
-                        stepIdx++;
-                    } else {
-                        clearInterval(interval);
-                        triggerBurstAndSwitch();
-                    }
-                }, 600);
-            }
+                // Retrieve home path
+                pywebview.api.get_home_dir().then(path => {
+                    this.homeDirPath = path;
+                    this.currentDirPath = path;
+                    document.getElementById('vaultDestPath').value = path + "/.vault";
+                });
+            },
 
-            function triggerBurstAndSwitch() {
-                logoBurst.classList.add("fire");
-                setTimeout(() => {
-                    loadingScreen.classList.add("hidden");
-                    mainContainer.classList.add("ready");
-                    checkTorNetwork();
-                }, 500);
-            }
+            renderShortcutsAndDock() {
+                const bench = document.getElementById("desktopWorkbench");
+                const dock = document.getElementById("systemDock");
 
-            
-            function checkTorNetwork() {
-                
-                const isOnionDomain = window.location.hostname.endsWith('.onion');
-                const isTorBrowser = navigator.userAgent.includes("TorBrowser") || isOnionDomain;
+                bench.innerHTML = "";
+                dock.innerHTML = "";
 
-                if (isTorBrowser) {
-                    
-                    statusCard.className = "status-card secured";
-                    statusLabel.textContent = "Tor Network Active";
-                    statusDesc.innerHTML = "Your connection is fully end-to-end encrypted.<br>Safe access to the portal granted.";
-                    
-                    gateBtn.classList.remove("disabled");
-                    gateBtn.innerHTML = `<span>Enter NightCrypter</span><i class="fa-solid fa-unlock-keyhole"></i>`;
-                } else {
-                    
-                    statusCard.className = "status-card unsecured";
-                    statusLabel.textContent = "Tor Hidden";
-                    statusDesc.innerHTML = "You are currently browsing via the standard web.<br>Launch Tor Browser to open this node safely.";
-                    
-                    gateBtn.classList.remove("disabled");
-                    gateBtn.href = "https://www.torproject.org/download/";
-                    gateBtn.target = "_blank";
-                    gateBtn.innerHTML = `<span>Get Tor Browser</span><i class="fa-solid fa-download"></i>`;
+                SYSTEM_APPS.forEach(app => {
+                    // Desktop shortcut
+                    const shortcut = document.createElement("div");
+                    shortcut.className = "desktop-shortcut";
+                    shortcut.id = `shortcut-${app.id}`;
+                    shortcut.onclick = () => this.openWindow(app.id);
+                    shortcut.innerHTML = `
+                        <div class="shortcut-icon"><i class="${app.icon}"></i></div>
+                        <div class="shortcut-label">${app.title}</div>
+                    `;
+                    bench.appendChild(shortcut);
+
+                    // Dock icon
+                    const dockWrap = document.createElement("div");
+                    dockWrap.className = "dock-item-wrapper";
+                    dockWrap.id = `dock-${app.id}`;
+                    dockWrap.onclick = () => this.toggleWindow(app.id, `dock-${app.id}`);
+                    dockWrap.innerHTML = `
+                        <div class="dock-item"><i class="${app.icon}"></i></div>
+                        <div class="dock-tooltip">${app.title}</div>
+                        <div class="dock-dot"></div>
+                    `;
+                    dock.appendChild(dockWrap);
+                });
+            },
+
+            initWindowDragging() {
+                document.querySelectorAll(".os-window").forEach(win => {
+                    win.addEventListener("mousedown", () => this.bringToFront(win.id));
+                    const bar = win.querySelector(".window-titlebar");
+                    let x = 0, y = 0, sx = 0, sy = 0;
+                    bar.onmousedown = (e) => {
+                        e.preventDefault();
+                        sx = e.clientX;
+                        sy = e.clientY;
+                        document.onmouseup = () => {
+                            document.onmouseup = null;
+                            document.onmousemove = null;
+                        };
+                        document.onmousemove = (me) => {
+                            me.preventDefault();
+                            x = sx - me.clientX;
+                            y = sy - me.clientY;
+                            sx = me.clientX;
+                            sy = me.clientY;
+                            win.style.top = Math.max(0, win.offsetTop - y) + "px";
+                            win.style.left = (win.offsetLeft - x) + "px";
+                        };
+                    };
+                });
+            },
+
+            bringToFront(winId) {
+                const idx = this.windowLayers.indexOf(winId);
+                if (idx > -1) this.windowLayers.splice(idx, 1);
+                this.windowLayers.push(winId);
+
+                this.windowLayers.forEach((id, l) => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.zIndex = 100 + l;
+                });
+                this.focusedWindow = winId;
+            },
+
+            openWindow(winId) {
+                const win = document.getElementById(winId);
+                if (!win) return;
+
+                win.classList.remove("hidden");
+                const dockEl = document.getElementById(`dock-${winId}`);
+                if (dockEl) dockEl.classList.add("active");
+
+                this.bringToFront(winId);
+                gsap.fromTo(win, { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(1.5)" });
+
+                if (winId === 'winFileManager') {
+                    this.loadDirectory(this.currentDirPath);
                 }
+            },
+
+            closeWindow(winId) {
+                const win = document.getElementById(winId);
+                if (!win) return;
+
+                const dockEl = document.getElementById(`dock-${winId}`);
+                if (dockEl) dockEl.classList.remove("active");
+
+                gsap.to(win, { scale: 0.9, opacity: 0, duration: 0.25, onComplete: () => win.classList.add("hidden") });
+            },
+
+            minimizeWindow(winId, dockId) {
+                const win = document.getElementById(winId);
+                const dock = document.getElementById(dockId);
+                if (!win || !dock) return;
+
+                const wRect = win.getBoundingClientRect();
+                const dRect = dock.getBoundingClientRect();
+
+                const tx = dRect.left + (dRect.width/2) - wRect.left;
+                const ty = dRect.top - wRect.top;
+
+                gsap.to(win, {
+                    x: tx - (wRect.width/2),
+                    y: ty,
+                    scaleX: 0.05,
+                    scaleY: 0.05,
+                    opacity: 0,
+                    duration: 0.5,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        win.classList.add("hidden");
+                        gsap.set(win, { x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: 1 });
+                    }
+                });
+            },
+
+            maximizeWindow(winId) {
+                const win = document.getElementById(winId);
+                if (!win) return;
+
+                if (win.style.width === "100vw") {
+                    win.style.width = "750px";
+                    win.style.height = "450px";
+                    win.style.top = "10%";
+                    win.style.left = "15%";
+                } else {
+                    win.style.width = "100vw";
+                    win.style.height = "calc(100vh - 32px)";
+                    win.style.top = "32px";
+                    win.style.left = "0";
+                }
+            },
+
+            toggleWindow(winId, dockId) {
+                const win = document.getElementById(winId);
+                if (!win) return;
+
+                if (win.classList.contains("hidden")) {
+                    this.openWindow(winId);
+                } else {
+                    if (this.focusedWindow === winId) {
+                        this.minimizeWindow(winId, dockId);
+                    } else {
+                        this.bringToFront(winId);
+                    }
+                }
+            },
+
+            // CUSTOM POPUP ADVISORY MODAL
+            showAlert(title, message) {
+                document.getElementById('dialogTitle').textContent = title.toUpperCase();
+                document.getElementById('dialogMessage').textContent = message;
+                document.getElementById('dialogOverlay').classList.remove('hidden');
+                gsap.fromTo(".custom-dialog", { scale: 0.85, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out" });
+            },
+
+            closeDialog() {
+                document.getElementById('dialogOverlay').classList.add('hidden');
+            },
+
+            handleAuthentication() {
+                const u = document.getElementById("usernameInput").value;
+                const p = document.getElementById("passwordInput").value;
+
+                if (u === "Topia" && p === "topiatheking") {
+                    gsap.to("#loginLayer", {
+                        opacity: 0,
+                        duration: 0.5,
+                        onComplete: () => {
+                            document.getElementById("loginLayer").classList.add("hidden");
+                            document.getElementById("desktopLayer").classList.remove("hidden");
+                            gsap.fromTo("#desktopLayer", { opacity: 0 }, { opacity: 1, duration: 0.4 });
+                        }
+                    });
+                } else {
+                    this.showAlert("Access Denied", "Authorized cryptographic handle mismatch. Verification failed.");
+                }
+            },
+
+            // DIRECTORY NAVIGATION CORE
+            loadDirectory(dir) {
+                let target = dir;
+                if (dir === 'home') target = this.homeDirPath;
+                if (dir === 'desktop') target = this.homeDirPath + "/Desktop";
+
+                pywebview.api.read_dir(target).then(res => {
+                    if (res.status === 'ok') {
+                        this.currentDirPath = res.current_path;
+                        document.getElementById("fmPathDisplay").textContent = res.current_path;
+
+                        const grid = document.getElementById("fileManagerGrid");
+                        grid.innerHTML = "";
+
+                        res.data.forEach(item => {
+                            const gridItem = document.createElement("div");
+                            gridItem.className = "file-item";
+                            const icon = item.isDirectory ? "fa-solid fa-folder text-cyan" : "fa-solid fa-file";
+                            gridItem.innerHTML = `
+                                <i class="${icon}"></i>
+                                <div class="file-name">${item.name}</div>
+                            `;
+
+                            gridItem.onclick = () => {
+                                if (item.isDirectory) {
+                                    this.loadDirectory(item.path);
+                                } else {
+                                    this.handleFileRouting(item.path);
+                                }
+                            };
+                            grid.appendChild(gridItem);
+                        });
+                    } else {
+                        this.showAlert("Error", "Unable to read directory: " + res.message);
+                    }
+                });
+            },
+
+            handleFileRouting(filePath) {
+                const ext = filePath.split('.').pop().toLowerCase();
+                if (ext === 'exe') {
+                    this.showAlert("Spawn Adapter", "Initiating process mapping for native application: " + filePath);
+                    pywebview.api.execute_binary(filePath).then(res => {
+                        if (res.status === 'ok') {
+                            this.showAlert("Success", res.message);
+                        } else {
+                            this.showAlert("Execution Failed", res.message);
+                        }
+                    });
+                } else {
+                    this.showAlert("File Open", "File extension routing is active. Loaded path: " + filePath);
+                }
+            },
+
+            // SHELL EMULATION LINK
+            initTerminal() {
+                pywebview.api.init_terminal();
+                const field = document.getElementById("terminalInputField");
+                field.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") {
+                        const cmd = field.value;
+                        pywebview.api.write_terminal(cmd);
+                        field.value = "";
+                    }
+                });
+            },
+
+            appendTerminalOutput(text) {
+                const out = document.getElementById("terminalOutput");
+                out.textContent += text;
+                const container = document.getElementById("terminalBox");
+                container.scrollTop = container.scrollHeight;
+            },
+
+            // METRICS MONITORING
+            initSystemMetrics() {
+                setInterval(() => {
+                    pywebview.api.get_system_metrics().then(metrics => {
+                        if (metrics.status === 'ok') {
+                            document.getElementById("menubarMetrics").textContent = `CPU: ${metrics.cpu}% | RAM: ${metrics.ramPercent}%`;
+                        }
+                    });
+                }, 2000);
+            },
+
+            // MONERO KEY GENERATION
+            generateXmrKeys() {
+                pywebview.api.generate_xmr_wallet().then(res => {
+                    if (res.status === 'ok') {
+                        document.getElementById("xmrSeedPhrase").value = res.seed_phrase;
+                        document.getElementById("xmrAddress").value = res.address;
+                        this.showAlert("XMR Keys Generated", "Secured entropy used to compute Monero Keys!");
+                    }
+                });
+            },
+
+            // PGP ASYMMETRIC KEY CRYPTO
+            generatePgpKeys() {
+                pywebview.api.generate_pgp_keypair().then(res => {
+                    if (res.status === 'ok') {
+                        this.showAlert("PGP Status", res.message);
+                    }
+                });
+            },
+
+            pgpEncryptText() {
+                const val = document.getElementById("pgpInputText").value;
+                pywebview.api.pgp_encrypt(val).then(res => {
+                    if (res.status === 'ok') {
+                        document.getElementById("pgpCipherText").value = res.encrypted;
+                    } else {
+                        this.showAlert("PGP Error", res.message);
+                    }
+                });
+            },
+
+            pgpDecryptText() {
+                const val = document.getElementById("pgpCipherText").value;
+                pywebview.api.pgp_decrypt(val).then(res => {
+                    if (res.status === 'ok') {
+                        document.getElementById("pgpInputText").value = res.decrypted;
+                        this.showAlert("PGP Decrypted", "Message successfully decrypted!");
+                    } else {
+                        this.showAlert("PGP Error", res.message);
+                    }
+                });
+            },
+
+            // SECURE AES VAULT ACTIONS
+            vaultEncryptFile() {
+                const src = document.getElementById("vaultSrcPath").value;
+                const dest = document.getElementById("vaultDestPath").value;
+                pywebview.api.vault_encrypt(src, dest).then(res => {
+                    if (res.status === 'ok') {
+                        this.showAlert("Insulated", res.message);
+                    } else {
+                        this.showAlert("Error", res.message);
+                    }
+                });
+            },
+
+            vaultDecryptFile() {
+                const src = document.getElementById("vaultSrcPath").value;
+                const dest = document.getElementById("vaultDestPath").value;
+                // Auto restore expects a .vault filename
+                pywebview.api.vault_decrypt(src, dest).then(res => {
+                    if (res.status === 'ok') {
+                        this.showAlert("Restored", res.message);
+                    } else {
+                        this.showAlert("Error", res.message);
+                    }
+                });
+            },
+
+            // TOR BROWSER TABS NAVIGATION
+            reloadBrowser() {
+                document.getElementById('browserIframe').contentWindow.location.reload();
+            },
+
+            navigateBrowser() {
+                const url = document.getElementById('browserUrlField').value;
+                document.getElementById('browserIframe').src = url;
             }
+        };
 
-            
-            mainContainer.addEventListener("mousemove", (e) => {
-                const rect = mainContainer.getBoundingClientRect();
-                const x = e.clientX - rect.left - (rect.width / 2);
-                const y = e.clientY - rect.top - (rect.height / 2);
-                
-                
-                const rotateX = -(y / rect.height) * 16; 
-                const rotateY = (x / rect.width) * 16;
-                
-                cardBox.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        if (window.pywebview) {
+            window.addEventListener('pywebviewready', () => {
+                OS.init();
             });
-
-            mainContainer.addEventListener("mouseleave", () => {
-                cardBox.style.transform = "rotateX(0deg) rotateY(0deg)";
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.pywebview = {
+                    api: {
+                        get_home_dir: () => Promise.resolve("/home/topia"),
+                        read_dir: (path) => Promise.resolve({ status: "ok", data: [] }),
+                        get_system_metrics: () => Promise.resolve({ status: "ok", cpu: 4, ramPercent: 18 }),
+                        init_terminal: () => Promise.resolve({ status: "ok" }),
+                        generate_xmr_wallet: () => Promise.resolve({ status: "ok", seed_phrase: "secure seed quantum private monero key spend routing vault", address: "44AFFxmraddress45bytesofsecuredentropykeys" }),
+                        generate_pgp_keypair: () => Promise.resolve({ status: "ok", message: "RSA-2048 Keypair successfully generated!" }),
+                        pgp_encrypt: (txt) => Promise.resolve({ status: "ok", encrypted: "4d65737361676520456e63727970746564205375636365737366756c6c79" }),
+                        pgp_decrypt: (hex) => Promise.resolve({ status: "ok", decrypted: "My Secure Off-Grid Handshake Message" })
+                    }
+                };
+                OS.init();
             });
-
-            
-            copyBtn.addEventListener("click", () => {
-                onionUrl.select();
-                onionUrl.setSelectionRange(0, 99999);
-                navigator.clipboard.writeText(onionUrl.value);
-
-                const origIcon = copyBtn.innerHTML;
-                copyBtn.innerHTML = `<i class="fa-solid fa-check" style="color: #00f0ff;"></i>`;
-                setTimeout(() => { copyBtn.innerHTML = origIcon; }, 2000);
-            });
-        });
+        }
     </script>
 </body>
 </html>
