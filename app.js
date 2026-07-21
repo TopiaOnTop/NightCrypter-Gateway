@@ -243,53 +243,23 @@ const OS = {
         );
     },
 
-    // SECURE AUTHENTICATION SYSTEM HANDSHAKE DELAY
+    // SECURE AUTHENTICATION SYSTEM
     handleAuthentication() {
         const user = document.getElementById('usernameInput').value;
         const key = document.getElementById('passwordInput').value;
 
         if (user === 'Topia' && key === 'topiatheking') {
-            const progressBox = document.getElementById('authProgress');
-            progressBox.style.display = 'flex';
-
-            let progress = 0;
-            const bar = document.getElementById('authProgressBar');
-            const logText = document.getElementById('authProgressText');
-
-            const steps = [
-                { limit: 20, text: "Generating 512-bit secure salt..." },
-                { limit: 50, text: "Computing Argon2id cryptographic parameters..." },
-                { limit: 80, text: "Insulating local memory storage blocks..." },
-                { limit: 100, text: "Handshake verify complete. Mounting user desktop state..." }
-            ];
-
-            let stepIdx = 0;
-            const interval = setInterval(() => {
-                if (progress < 100) {
-                    progress += 2;
-                    bar.style.width = `${progress}%`;
-
-                    if (stepIdx < steps.length && progress >= steps[stepIdx].limit) {
-                        logText.textContent = steps[stepIdx].text;
-                        stepIdx++;
-                    }
-                } else {
-                    clearInterval(interval);
-
-                    // Secure transition into the virtualized environment
-                    gsap.to("#loginLayer", {
-                        opacity: 0,
-                        duration: 0.8,
-                        ease: "power2.out",
-                        onComplete: () => {
-                            document.getElementById('loginLayer').classList.add('hidden');
-                            document.getElementById('desktopLayer').classList.remove('hidden');
-                            gsap.fromTo("#desktopLayer", { opacity: 0 }, { opacity: 1, duration: 0.5 });
-                        }
-                    });
+            // Direct transition into the virtualized environment without simulated loading delays
+            gsap.to("#loginLayer", {
+                opacity: 0,
+                duration: 0.5,
+                ease: "power2.out",
+                onComplete: () => {
+                    document.getElementById('loginLayer').classList.add('hidden');
+                    document.getElementById('desktopLayer').classList.remove('hidden');
+                    gsap.fromTo("#desktopLayer", { opacity: 0 }, { opacity: 1, duration: 0.4 });
                 }
-            }, 50);
-
+            });
         } else {
             this.showAlert("Access Denied", "Cryptographic authentication signature mismatch. Verify authorized admin credentials.", "fa-solid fa-triangle-exclamation text-cyan");
         }
