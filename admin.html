@@ -726,7 +726,10 @@
             try {
                 const res = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': currentPassword
+                    },
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
@@ -752,7 +755,10 @@
             }
 
             try {
-                const res = await fetch(endpoint, { method: 'POST' });
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'X-Admin-Password': currentPassword }
+                });
                 const data = await res.json();
                 if (res.ok) {
                     showToast(server ? `Reset active for ${server}` : 'Reset performed');

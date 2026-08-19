@@ -790,6 +790,10 @@ def trigger_boom_global():
 
 @app.route('/api/reset', methods=['POST'])
 def reset_boom_global():
+    is_auth, actor = authenticate_request()
+    if not is_auth:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+
     data = request.get_json(silent=True) or request.form or {}
     srv = data.get('server') or data.get('server_name')
     if srv:
@@ -821,6 +825,10 @@ def trigger_boom_server(server_name):
 
 @app.route('/api/reset/<server_name>', methods=['POST', 'GET'])
 def reset_boom_server(server_name):
+    is_auth, actor = authenticate_request()
+    if not is_auth:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+
     active_booms.pop(server_name.lower(), None)
     active_booms_l7.pop(server_name.lower(), None)
     return jsonify({"status": "success", "message": f"Reset pour {server_name}"}), 200
@@ -873,6 +881,10 @@ def trigger_boom_l7_global():
 
 @app.route('/api/reset/l7', methods=['POST'])
 def reset_boom_l7_global():
+    is_auth, actor = authenticate_request()
+    if not is_auth:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+
     data = request.get_json(silent=True) or request.form or {}
     srv = data.get('server') or data.get('server_name')
     if srv:
@@ -902,6 +914,10 @@ def trigger_boom_l7_server(server_name):
 
 @app.route('/api/reset/l7/<server_name>', methods=['POST', 'GET'])
 def reset_boom_l7_server(server_name):
+    is_auth, actor = authenticate_request()
+    if not is_auth:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+
     active_booms_l7.pop(server_name.lower(), None)
     return jsonify({"status": "success", "message": f"Reset L7 pour {server_name}"}), 200
 
