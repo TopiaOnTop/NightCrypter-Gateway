@@ -2,29 +2,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loader = document.getElementById('loader');
     const urlParams = new URLSearchParams(window.location.search);
     const selectedServerId = urlParams.get('id');
-    const layer = 'layer4';
+
+    const isLayer7Route = window.location.pathname.startsWith('/l7') || window.location.pathname.startsWith('/layer7') || urlParams.has('l7');
+    const layer = isLayer7Route ? 'layer7' : 'layer4';
 
     try {
         const servers = await fetch('/api/servers').then(r => r.json());
         const serversLayer = servers[layer] || {};
 
         let selectedServer = null;
+        let activeServerKey = null;
+
         if (selectedServerId) {
             for (const cat of Object.values(serversLayer)) {
-                if (cat.servers && cat.servers[selectedServerId]) {
-                    selectedServer = cat.servers[selectedServerId]; break;
-                }
-            }
-        }
-        if (!selectedServer) {
-            for (const cat of Object.values(serversLayer)) {
-                for (const srv of Object.values(cat.servers || {})) {
-                    selectedServer = srv; break;
+                if (cat.servers) {
+                    for (const [sKey, sVal] of Object.entries(cat.servers)) {
+                        if (sKey.toLowerCase() === selectedServerId.toLowerCase() || sVal.name.toLowerCase() === selectedServerId.toLowerCase()) {
+                            selectedServer = sVal;
+                            activeServerKey = sKey;
+                            break;
+                        }
+                    }
                 }
                 if (selectedServer) break;
             }
         }
-        if (!selectedServer) selectedServer = { name: 'Unknown', ip: '0.0.0.0', ports: '22 & 53', bandwidth: '0 Gbps' };
+        if (!selectedServer) {
+            for (const cat of Object.values(serversLayer)) {
+                for (const [sKey, sVal] of Object.entries(cat.servers || {})) {
+                    selectedServer = sVal;
+                    activeServerKey = sKey;
+                    break;
+                }
+                if (selectedServer) break;
+            }
+        }
+        if (!selectedServer) {
+            selectedServer = isLayer7Route
+                ? { name: 'FDCServer', ip: 'https://50.7.24.51/', ports: '443', bandwidth: '2M' }
+                : { name: 'Vantiva', ip: '157.254.50.8', ports: '22 & 80', bandwidth: '400 Gbps' };
+            activeServerKey = isLayer7Route ? 'FDCServer' : 'Vantiva';
+        }
 
         renderGraphDetails(selectedServer);
         renderServers(servers, layer);
@@ -50,8 +68,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        const sid = selectedServerId || Object.keys((Object.values(serversLayer)[0] || {}).servers || {})[0] || 'gcore';
-        const chartRes = await fetch(`/api/layer4/${sid}`).then(r => r.json()).catch(() => ({ bandwidth: Array(50).fill(0), packets: Array(50).fill(0) }));
+        const sid = activeServerKey;
+        const chartRes = await fetch(`/api/${layer}/${sid}`).then(r => r.json()).catch(() => ({ bandwidth: Array(50).fill(0), packets: Array(50).fill(0) }));
         createChart({
             bandwidth: (chartRes.bandwidth || []).map(Number),
             packets: (chartRes.packets || []).map(Number)
@@ -59,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
-        setInterval(() => updateChart('layer4', sid), 1500);
+        setInterval(() => updateChart(layer, sid), 1500);
 
     } catch(e) {
         console.error('main.js error:', e);

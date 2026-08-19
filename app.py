@@ -15,7 +15,7 @@ CORS(app)
 l7_metrics_cache = {}
 
 # Admin configuration
-ADMIN_PASSWORD = "topiatheking"
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "topiatheking")
 
 # Dynamic Boom tracker pour Layer 4 et Layer 7
 # Structure L4: { server_name_lower: { "format": int (1 or 2), "bps": float, "pps": float, "start_time": float } }
@@ -93,24 +93,13 @@ BANNERS = [
 ]
 
 BANNER_ANALYTICS = {}
-# Initialize mock analytics history for default banners
+# Initialize real analytics storage for default banners (start at 0 clicks)
 for b in BANNERS:
     rep_id = b["report_id"]
-    now = time.time()
-    clicks_list = []
-    # Generate mock clicks over past 7 days for rich analytics
-    for i in range(random.randint(45, 120)):
-        click_time = now - random.uniform(0, 86400 * 7)
-        clicks_list.append({
-            "timestamp": click_time,
-            "ip": f"{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}",
-            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        })
-    clicks_list.sort(key=lambda x: x["timestamp"])
     BANNER_ANALYTICS[rep_id] = {
         "banner_id": b["id"],
-        "clicks": clicks_list,
-        "impressions": len(clicks_list) * random.randint(15, 30)
+        "clicks": [],
+        "impressions": 0
     }
 
 # Dynamic Reviews storage
@@ -376,13 +365,11 @@ def record_banner_click(banner_id):
         return jsonify({"status": "error", "message": "Banner not found"}), 404
 
     rep_id = banner["report_id"]
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     user_agent = request.headers.get('User-Agent', '')
 
     if rep_id in BANNER_ANALYTICS:
         BANNER_ANALYTICS[rep_id]["clicks"].append({
             "timestamp": time.time(),
-            "ip": client_ip,
             "user_agent": user_agent
         })
 
@@ -521,7 +508,6 @@ def view_ads_report_page(report_id):
                     <thead class="bg-slate-900 text-gray-400 uppercase border-b border-gray-800">
                         <tr>
                             <th class="p-3">Timestamp</th>
-                            <th class="p-3">IP Address</th>
                             <th class="p-3">User Agent</th>
                         </tr>
                     </thead>
@@ -620,8 +606,7 @@ def view_ads_report_page(report_id):
                 tr.className = 'hover:bg-slate-900/50 transition-colors';
                 tr.innerHTML = `
                     <td class="p-3 text-blue-400 font-mono">${new Date(c.timestamp * 1000).toLocaleString()}</td>
-                    <td class="p-3 font-mono text-emerald-400">${c.ip}</td>
-                    <td class="p-3 text-gray-400 truncate max-w-xs">${c.user_agent}</td>
+                    <td class="p-3 text-gray-400 truncate max-w-md">${c.user_agent || 'Unknown'}</td>
                 `;
                 table.appendChild(tr);
             });
@@ -987,10 +972,10 @@ def get_layer7_metrics(server_name):
     total_requests = 0
     raw_text = ""
 
-    # Tentative d'extraire les métriques Nginx réelles
+    # Tentative d'extraire les métriques Nginx réelles avec timeout très court (0.3s)
     if status_url:
         try:
-            resp = requests.get(status_url, timeout=1.5)
+            resp = requests.get(status_url, timeout=0.3)
             if resp.status_code == 200:
                 raw_text = resp.text
         except Exception:

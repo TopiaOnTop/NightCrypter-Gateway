@@ -27,7 +27,8 @@ function createChart(data) {
     wrapper.appendChild(watermark);
     chartContainer.appendChild(wrapper);
 
-    const isL7 = window.location.pathname.includes('/l7');
+    const urlParams = new URLSearchParams(window.location.search);
+    const isL7 = window.location.pathname.startsWith('/l7') || window.location.pathname.startsWith('/layer7') || urlParams.has('l7');
     const bw = Array.isArray(data.bandwidth) ? data.bandwidth : Array(50).fill(0);
     const pk = Array.isArray(data.packets) ? data.packets : Array(50).fill(0);
     const maxVal = isL7 ? Math.max(...bw, 10) : Math.max(...bw, ...pk, 0.0001);
@@ -78,7 +79,7 @@ const _fl = { count: 0, last: -1 };
 async function updateChart(layer, serverId) {
     try {
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 1500);
+        const t = setTimeout(() => controller.abort(), 4000);
         const res = await fetch('/api/' + layer + '/' + serverId, { signal: controller.signal, cache: 'no-cache' });
         clearTimeout(t);
         const data = await res.json();
