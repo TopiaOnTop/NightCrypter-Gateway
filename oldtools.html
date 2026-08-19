@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Mirrored from dstat.topia/tools by HTTrack Website Copier/3.x [XR&CO'2014], Fri, 14 Aug 2026 09:13:14 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
+<head>
+    <meta charset="UTF-8">
+    <title>dstat.topia - Tools</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Bungee:wght@400&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://unpkg.com/lucide%401.31.0/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <script src="sidebar.js"></script>
+    <script src="banners.js"></script>
+    <style>
+        :root { --bg-primary:#0A0B1A;--bg-secondary:#0D0E23;--border-color:#374151;--text-primary:#ffffff;--text-secondary:#d1d5db;--accent-color:#3b82f6;--shadow-color:rgba(59,130,246,0.1); }
+        body.theme-blue { --bg-primary:#0A0B1A;--bg-secondary:#0D0E23;--border-color:#374151;--accent-color:#3b82f6; }
+        body.theme-gray { --bg-primary:#0A0B12;--bg-secondary:#0D0E1A;--border-color:#2A2E3F;--accent-color:#6B7280; }
+        body.theme-red { --bg-primary:#0F0A1A;--bg-secondary:#150D23;--border-color:#3D2E5C;--accent-color:#8b5cf6; }
+        body { font-family:"Inter",sans-serif;background:var(--bg-primary);color:var(--text-primary);user-select:none; }
+        ::-webkit-scrollbar { display:none; }
+        [class~=category-content] { max-height:0;overflow:hidden;opacity:0;transition:max-height .3s ease-out,opacity .3s ease-out; }
+        [class~=rotate-icon][class~=open] { transform:rotate(90deg); }
+        .sidebar-item-link { display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:10px;color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s ease; }
+        .sidebar-item-link:hover { color:white; }
+        .tool-tab { display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;cursor:pointer;color:var(--text-secondary);font-size:.875rem;font-weight:500;transition:all .2s ease;border:1px solid transparent; }
+        .tool-tab:hover { color:var(--text-primary);background:rgba(255,255,255,.05); }
+        .tool-tab.active { color:var(--text-primary);background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.3); }
+        .tool-input { width:100%;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;padding:12px 16px;color:var(--text-primary);font-size:.9rem;outline:none;transition:border-color .2s ease; }
+        .tool-input:focus { border-color:var(--accent-color); }
+        .tool-input::placeholder { color:var(--text-secondary); }
+        .tool-btn { background:var(--accent-color);color:white;border:none;border-radius:8px;padding:12px 20px;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s ease;white-space:nowrap; }
+        .tool-btn:hover { opacity:.9;transform:translateY(-1px); }
+        .tool-btn-secondary { background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);border-radius:8px;padding:12px 20px;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s ease;white-space:nowrap; }
+        .tool-btn-secondary:hover { color:var(--text-primary);border-color:var(--accent-color); }
+        .result-card { background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;padding:16px; }
+        .result-label { font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px; }
+        .result-value { font-size:.9rem;color:var(--text-primary);word-break:break-all; }
+        .dns-chip { padding:6px 14px;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-secondary);transition:all .15s ease; }
+        .dns-chip.selected { background:var(--accent-color);border-color:var(--accent-color);color:white; }
+        .tool-panel { display:none; }
+        .tool-panel.active { display:block; }
+        .themes-container { margin-top:16px;margin-bottom:16px; }
+        .themes-header { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between; }
+        .themes-header span { font-size:13px;font-weight:500;color:var(--text-secondary); }
+        .themes-header svg { transition:transform .3s ease;color:var(--text-secondary);width:16px;height:16px; }
+        .themes-header.open svg { transform:rotate(180deg); }
+        .themes-dropdown { max-height:0;overflow:hidden;transition:max-height .3s ease-out;margin-top:4px; }
+        .themes-dropdown.show { max-height:200px; }
+        .theme-option { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:8px 12px;margin-top:6px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;color:var(--text-secondary); }
+        .color-dot { width:16px;height:16px;border-radius:50%;display:inline-block; }
+        .dot-blue { background:#3b82f6; } .dot-gray { background:#6B7280; } .dot-red { background:#8b5cf6; }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: rgba(255,255,255,0.7);
+            font-size: 1em;
+            pointer-events: none;
+            z-index: 9999;
+            animation: snowfall linear infinite;
+        }
+        @keyframes snowfall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0.3; }
+        }
+    </style>
+</head>
+<body class="theme-blue">
+<div class="flex min-h-screen">
+    <aside id="sidebar" class="fixed top-3 bottom-10 left-4 w-64 bg-[--bg-secondary] px-3 py-4 shadow-lg z-50 overflow-y-auto border border-gray-800/50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out rounded-2xl">
+        <button id="closeSidebar" class="md:hidden absolute top-4 right-4 text-[--text-secondary]"><i data-lucide="x" class="w-6 h-6"></i></button>
+        <div class="mb-6 flex items-center gap-3 px-3 pt-2">
+            <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px;flex-shrink:0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+            </div>
+            <span class="text-base font-bold tracking-tight text-[--text-primary]">dstat.topia</span>
+        </div>
+        <nav class="flex-1 space-y-4">
+            <div>
+                <p class="px-3 text-xs font-semibold text-[--text-secondary] uppercase mb-2">MAIN</p>
+                <div class="space-y-1">
+                    <a href="index.html" class="sidebar-item-link"><i data-lucide="home" class="h-4 w-4"></i><span>Dashboard</span></a>
+                    <a href="tools.html" class="sidebar-item-link"><i data-lucide="wrench" class="h-4 w-4"></i><span>Tools</span></a>
+                    <a href="reviews.html" class="sidebar-item-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4"><path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd"/></svg>
+                        <span>Booter Review</span>
+                    </a>
+                </div>
+            </div>
+            <div class="themes-container">
+                <div class="themes-header" id="themesHeader"><span>Themes</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                <div class="themes-dropdown" id="themesDropdown">
+                    <div class="theme-option" onclick="setTheme('blue')"><span class="color-dot dot-blue"></span><span>Blue Theme</span></div>
+                    <div class="theme-option" onclick="setTheme('gray')"><span class="color-dot dot-gray"></span><span>Gray/Black Theme</span></div>
+                    <div class="theme-option" onclick="setTheme('red')"><span class="color-dot dot-red"></span><span>Purple Theme</span></div>
+                </div>
+            </div>
+            <div style="margin-top:24px;">
+                <p class="px-3 text-xs font-semibold text-[--text-secondary] uppercase mb-2">LIVE DSTAT</p>
+                <div class="space-y-1" id="servers-nav"></div>
+            </div>
+        </nav>
+    </aside>
+    <main class="flex-1 p-5 md:p-6 md:ml-72 flex flex-col min-h-screen">
+        <button id="openSidebar" class="md:hidden fixed top-4 left-4 z-50 text-[--text-secondary]"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        <div class="flex-1 space-y-6">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3"><i data-lucide="" class="h-5 w-5 text-[--accent-color]"></i><h1 class="text-lg font-semibold"></h1></div>
+                <button id="snowBtn" onclick="toggleSnow()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 8px;display:flex;align-items:center;" class="text-[--text-secondary] hover:text-white transition-colors">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07M12 6l-2-2M12 6l2-2M12 18l-2 2M12 18l2 2M6 12l-2-2M6 12l-2 2M18 12l2-2M18 12l2 2"/></svg>
+                </button>
+            </div>
+            <div class="flex gap-6 min-h-[500px]">
+                <div class="w-48 flex-shrink-0 space-y-1">
+                    <div class="tool-tab active" onclick="switchTab(this,'info-lookup')"><i data-lucide="search" class="h-4 w-4"></i>Info Lookup</div>
+                    <div class="tool-tab" onclick="switchTab(this,'dns-resolver')"><i data-lucide="globe" class="h-4 w-4"></i>DNS Resolver</div>
+                </div>
+                <div class="flex-1 rounded-lg border border-gray-800/50 bg-[--bg-secondary] p-6">
+                    <div id="panel-info-lookup" class="tool-panel active">
+                        <h2 class="text-base font-semibold mb-1">Info Lookup</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Detect input type and fetch basic records for quick diagnostics.</p>
+                        <div class="flex gap-3 mb-6"><input id="lookup-input" class="tool-input" type="text" placeholder="Enter IP, domain, or ASN..."/><button class="tool-btn" onclick="runLookup()"><span id="lookup-btn-text">Lookup</span></button></div>
+                        <div id="lookup-results" class="hidden">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div class="result-card"><div class="result-label">IP</div><div class="result-value" id="r-ip">—</div></div>
+                                <div class="result-card"><div class="result-label">ASN</div><div class="result-value" id="r-asn">—</div></div>
+                                <div class="result-card"><div class="result-label">ISP</div><div class="result-value" id="r-isp">—</div></div>
+                                <div class="result-card"><div class="result-label">Organisation</div><div class="result-value" id="r-org">—</div></div>
+                                <div class="result-card"><div class="result-label">Country</div><div class="result-value" id="r-country">—</div></div>
+                                <div class="result-card"><div class="result-label">Region</div><div class="result-value" id="r-region">—</div></div>
+                                <div class="result-card"><div class="result-label">City</div><div class="result-value" id="r-city">—</div></div>
+                                <div class="result-card"><div class="result-label">ZIP</div><div class="result-value" id="r-zip">—</div></div>
+                                <div class="result-card"><div class="result-label">Timezone</div><div class="result-value" id="r-tz">—</div></div>
+                            </div>
+                            <div class="result-card mt-3"><div class="result-label">Coordinates</div><div class="result-value" id="r-coords">—</div></div>
+                            <div class="result-card mt-3"><div class="result-label">Resolved IPs</div><div class="result-value" id="r-resolved">—</div></div>
+                        </div>
+                        <div id="lookup-error" class="hidden text-sm text-red-400 mt-4"></div>
+                    </div>
+                    <div id="panel-dns-resolver" class="tool-panel">
+                        <h2 class="text-base font-semibold mb-1">DNS Resolver</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Pick record types to resolve, or run all for a full snapshot.</p>
+                        <div class="flex gap-3 mb-4">
+                            <input id="dns-input" class="tool-input" type="text" placeholder="Enter domain..."/>
+                            <button class="tool-btn-secondary" onclick="runDns(false)"><span id="dns-sel-text">Resolve Selected</span></button>
+                            <button class="tool-btn" onclick="runDns(true)"><span id="dns-all-text">Resolve All</span></button>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-6" id="dns-chips">
+                            <div class="dns-chip selected" data-type="A">A</div>
+                            <div class="dns-chip selected" data-type="AAAA">AAAA</div>
+                            <div class="dns-chip" data-type="CNAME">CNAME</div>
+                            <div class="dns-chip" data-type="TXT">TXT</div>
+                            <div class="dns-chip" data-type="MX">MX</div>
+                            <div class="dns-chip" data-type="NS">NS</div>
+                            <div class="dns-chip" data-type="SOA">SOA</div>
+                        </div>
+                        <div id="dns-results" class="hidden"><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="dns-grid"></div></div>
+                        <div id="dns-error" class="hidden text-sm text-red-400 mt-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-between items-center p-4 mt-6 text-sm text-gray-600 border-t border-gray-800/50">
+            <div>Copyright &copy;2024-2025 dstat.topia All rights Reserved | Version 1.4</div>
+            <div class="flex items-center">Hand-crafted & Made with <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"/></svg></div>
+        </div>
+    </main>
+</div>
+<script>
+function setCookie(n,v,d){let e='';if(d){const dt=new Date();dt.setTime(dt.getTime()+(d*864e5));e='; expires='+dt.toUTCString();}document.cookie=n+'='+(v||'')+e+'; path=/';}
+function getCookie(n){const eq=n+'=',ca=document.cookie.split(';');for(let c of ca){c=c.trim();if(c.indexOf(eq)===0)return c.substring(eq.length);}return null;}
+function setTheme(t){document.body.classList.remove('theme-blue','theme-gray','theme-red');document.body.classList.add('theme-'+t);setCookie('dstat_theme',t,30);}
+function loadSavedTheme(){const t=getCookie('dstat_theme');setTheme(['blue','gray','red'].includes(t)?t:'blue');}
+function switchTab(el,panelId){document.querySelectorAll('.tool-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));el.classList.add('active');document.getElementById('panel-'+panelId).classList.add('active');lucide.createIcons();}
+document.querySelectorAll('.dns-chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('selected')));
+async function runLookup(){
+    const q=document.getElementById('lookup-input').value.trim();if(!q)return;
+    document.getElementById('lookup-btn-text').innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+    document.getElementById('lookup-results').classList.add('hidden');
+    document.getElementById('lookup-error').classList.add('hidden');
+    try{
+        let ip=q;
+        if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(q)){const r=await fetch('https://dns.google/resolve?name='+encodeURIComponent(q)+'&type=A');const d=await r.json();if(d.Answer&&d.Answer.length)ip=d.Answer[d.Answer.length-1].data;}
+        const res=await fetch('https://ipapi.co/'+ip+'/json/');const d=await res.json();
+        if(d.error)throw new Error(d.reason||'Lookup failed');
+        let resolved=ip;
+        if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(q)){try{const r4=await fetch('https://dns.google/resolve?name='+encodeURIComponent(q)+'&type=A');const r6=await fetch('https://dns.google/resolve?name='+encodeURIComponent(q)+'&type=AAAA');const d4=await r4.json();const d6=await r6.json();const ips=[...(d4.Answer||[]).map(x=>x.data),...(d6.Answer||[]).map(x=>x.data)];if(ips.length)resolved=ips.join('\n');}catch(_){}}
+        document.getElementById('r-ip').textContent=d.ip||'—';document.getElementById('r-asn').textContent=d.asn||'—';document.getElementById('r-isp').textContent=d.org||'—';document.getElementById('r-org').textContent=d.org||'—';document.getElementById('r-country').textContent=d.country||'—';document.getElementById('r-region').textContent=d.region||'—';document.getElementById('r-city').textContent=d.city||'—';document.getElementById('r-zip').textContent=d.postal||'—';document.getElementById('r-tz').textContent=d.timezone||'—';document.getElementById('r-coords').textContent=d.latitude&&d.longitude?(d.latitude+', '+d.longitude):'—';document.getElementById('r-resolved').textContent=resolved||'—';
+        document.getElementById('lookup-results').classList.remove('hidden');
+    }catch(e){const err=document.getElementById('lookup-error');err.textContent='Error: '+e.message;err.classList.remove('hidden');}
+    document.getElementById('lookup-btn-text').textContent='Lookup';
+}
+async function runDns(all){
+    const q=document.getElementById('dns-input').value.trim();if(!q)return;
+    const allTypes=['A','AAAA','CNAME','TXT','MX','NS','SOA'];
+    let types=all?allTypes:[...document.querySelectorAll('.dns-chip.selected')].map(c=>c.dataset.type);
+    if(!types.length)types=allTypes;
+    if(all)document.querySelectorAll('.dns-chip').forEach(c=>c.classList.add('selected'));
+    document.getElementById('dns-sel-text').innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+    document.getElementById('dns-all-text').innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+    document.getElementById('dns-results').classList.add('hidden');
+    try{
+        const grid=document.getElementById('dns-grid');grid.innerHTML='';
+        await Promise.all(types.map(async type=>{
+            const res=await fetch('https://dns.google/resolve?name='+encodeURIComponent(q)+'&type='+type);
+            const data=await res.json();const answers=(data.Answer||[]).map(a=>a.data);
+            const card=document.createElement('div');card.className='result-card';
+            card.innerHTML='<div class="result-label">'+type+'</div><div class="result-value">'+(answers.length?answers.join('\n'):'—')+'</div>';
+            grid.appendChild(card);
+        }));
+        document.getElementById('dns-results').classList.remove('hidden');
+    }catch(e){const err=document.getElementById('dns-error');err.textContent='Error: '+e.message;err.classList.remove('hidden');}
+    document.getElementById('dns-sel-text').textContent='Resolve Selected';
+    document.getElementById('dns-all-text').textContent='Resolve All';
+}
+document.getElementById('lookup-input').addEventListener('keydown',e=>{if(e.key==='Enter')runLookup();});
+document.getElementById('dns-input').addEventListener('keydown',e=>{if(e.key==='Enter')runDns(false);});
+document.getElementById('themesHeader').addEventListener('click',function(){document.getElementById('themesDropdown').classList.toggle('show');document.getElementById('themesHeader').classList.toggle('open');});
+document.addEventListener('DOMContentLoaded',async function(){
+    lucide.createIcons();
+    loadSavedTheme();
+    try{
+        const servers=await fetch('/api/servers').then(r=>r.json());
+        renderServers(servers,'layer4');
+        lucide.createIcons();
+        const openBtn=document.getElementById('openSidebar');
+        const closeBtn=document.getElementById('closeSidebar');
+        const sidebar=document.getElementById('sidebar');
+        if(openBtn&&sidebar)openBtn.addEventListener('click',()=>sidebar.classList.remove('-translate-x-full'));
+        if(closeBtn&&sidebar)closeBtn.addEventListener('click',()=>sidebar.classList.add('-translate-x-full'));
+        document.querySelectorAll('.layer-button').forEach(function(btn){btn.addEventListener('click',function(){var c=btn.nextElementSibling;var i=btn.querySelector('.rotate-icon');var o=c.style.maxHeight&&c.style.maxHeight!=='0px';c.style.maxHeight=o?'0px':'600px';c.style.opacity=o?'0':'1';if(i)i.classList.toggle('open');});});
+        document.querySelectorAll('.category-button').forEach(function(btn){btn.addEventListener('click',function(){var c=btn.nextElementSibling;var i=btn.querySelector('.rotate-icon');var o=c.style.maxHeight&&c.style.maxHeight!=='0px';c.style.maxHeight=o?'0px':'600px';c.style.opacity=o?'0':'1';if(i)i.classList.toggle('open');});});
+    }catch(_){}
+});
+</script>
+<script disable-devtool-auto src="https://cdn.jsdelivr.net/npm/disable-devtool/disable-devtool.min.js"></script>
+<script>if(typeof DisableDevtool!=='undefined'){DisableDevtool({ondevtoolopen:()=>{window.close();}});}</script>
+<script>
+// ========== PERSISTENT SNOW (shared across pages via cookie) ==========
+let snowInterval = null;
+let snowEnabled = false;
+
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+function createSnowflake() {
+    const flake = document.createElement('div');
+    flake.className = 'snowflake';
+    flake.innerHTML = ['❄', '❅', '❆', '•'][Math.floor(Math.random() * 4)];
+    flake.style.left = Math.random() * 100 + 'vw';
+    flake.style.fontSize = (Math.random() * 10 + 8) + 'px';
+    flake.style.opacity = Math.random() * 0.6 + 0.2;
+    const duration = Math.random() * 6 + 5;
+    flake.style.animationDuration = duration + 's';
+    document.body.appendChild(flake);
+    setTimeout(() => flake.remove(), (duration + 3) * 1000);
+}
+
+function startSnow() {
+    if (snowInterval) return;
+    snowEnabled = true;
+    setCookie('dstat_snow', '1', 30);
+    const btn = document.getElementById('snowBtn');
+    if (btn) btn.style.color = '#93c5fd';
+    for (let i = 0; i < 12; i++) setTimeout(createSnowflake, i * 150);
+    snowInterval = setInterval(createSnowflake, 300);
+}
+
+function stopSnow() {
+    snowEnabled = false;
+    setCookie('dstat_snow', '0', 30);
+    clearInterval(snowInterval);
+    snowInterval = null;
+    const btn = document.getElementById('snowBtn');
+    if (btn) btn.style.color = '';
+    document.querySelectorAll('.snowflake').forEach(f => f.remove());
+}
+
+function toggleSnow() {
+    if (snowEnabled) stopSnow();
+    else startSnow();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (getCookie('dstat_snow') === '1') {
+        startSnow();
+    }
+});
+</script>
+
+</body>
+
+<!-- Mirrored from dstat.topia/tools by HTTrack Website Copier/3.x [XR&CO'2014], Fri, 14 Aug 2026 09:13:14 GMT -->
+</html>

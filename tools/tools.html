@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>dstat.topia - Tools SPA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bungee:wght@400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@1.31.0/dist/umd/lucide.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="banners.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <style>
+        :root { --bg-primary:#0A0B1A;--bg-secondary:#0D0E23;--border-color:#374151;--text-primary:#ffffff;--text-secondary:#d1d5db;--accent-color:#3b82f6;--shadow-color:rgba(59,130,246,0.1); }
+        body.theme-blue { --bg-primary:#0A0B1A;--bg-secondary:#0D0E23;--border-color:#374151;--accent-color:#3b82f6; }
+        body.theme-gray { --bg-primary:#0A0B12;--bg-secondary:#0D0E1A;--border-color:#2A2E3F;--accent-color:#6B7280; }
+        body.theme-red { --bg-primary:#0F0A1A;--bg-secondary:#150D23;--border-color:#3D2E5C;--accent-color:#8b5cf6; }
+        body { font-family:"Inter",sans-serif;background:var(--bg-primary);color:var(--text-primary);user-select:none; }
+        ::-webkit-scrollbar { width:6px; height:6px; }
+        ::-webkit-scrollbar-track { background:var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background:var(--border-color); border-radius:4px; }
+        ::-webkit-scrollbar-thumb:hover { background:var(--accent-color); }
+
+        .sidebar-item-link { display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:10px;color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s ease; }
+        .sidebar-item-link:hover { color:white; }
+
+        .tool-tab { display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;color:var(--text-secondary);font-size:.875rem;font-weight:500;transition:all .2s ease;border:1px solid transparent; }
+        .tool-tab:hover { color:var(--text-primary);background:rgba(255,255,255,.05); }
+        .tool-tab.active { color:var(--text-primary);background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.35);font-weight:600; }
+
+        .tag-chip { padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-secondary);transition:all .15s ease;white-space:nowrap; }
+        .tag-chip:hover { border-color:var(--accent-color);color:white; }
+        .tag-chip.active { background:var(--accent-color);border-color:var(--accent-color);color:white; }
+
+        .tool-input, .tool-textarea, .tool-select { width:100%;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-size:.875rem;outline:none;transition:border-color .2s ease; }
+        .tool-input:focus, .tool-textarea:focus, .tool-select:focus { border-color:var(--accent-color); }
+        .tool-input::placeholder, .tool-textarea::placeholder { color:#6b7280; }
+
+        .tool-btn { background:var(--accent-color);color:white;border:none;border-radius:8px;padding:10px 18px;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s ease;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px; }
+        .tool-btn:hover { opacity:.9;transform:translateY(-1px); }
+        .tool-btn:active { transform:translateY(0); }
+        .tool-btn-secondary { background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);border-radius:8px;padding:10px 18px;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s ease;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px; }
+        .tool-btn-secondary:hover { color:var(--text-primary);border-color:var(--accent-color); }
+
+        .result-card { background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;padding:14px; }
+        .result-label { font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:4px; }
+        .result-value { font-size:.875rem;color:var(--text-primary);word-break:break-all;font-family:monospace; }
+
+        .dns-chip { padding:6px 14px;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-secondary);transition:all .15s ease; }
+        .dns-chip.selected { background:var(--accent-color);border-color:var(--accent-color);color:white; }
+
+        .tool-panel { display:none; }
+        .tool-panel.active { display:block; }
+
+        .themes-container { margin-top:16px;margin-bottom:16px; }
+        .themes-header { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between; }
+        .themes-header span { font-size:13px;font-weight:500;color:var(--text-secondary); }
+        .themes-header svg { transition:transform .3s ease;color:var(--text-secondary);width:16px;height:16px; }
+        .themes-header.open svg { transform:rotate(180deg); }
+        .themes-dropdown { max-height:0;overflow:hidden;transition:max-height .3s ease-out;margin-top:4px; }
+        .themes-dropdown.show { max-height:200px; }
+        .theme-option { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:8px 12px;margin-top:6px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;color:var(--text-secondary); }
+        .color-dot { width:16px;height:16px;border-radius:50%;display:inline-block; }
+        .dot-blue { background:#3b82f6; } .dot-gray { background:#6B7280; } .dot-red { background:#8b5cf6; }
+
+        .snowflake { position: fixed; top: -10px; color: rgba(255,255,255,0.7); font-size: 1em; pointer-events: none; z-index: 9999; animation: snowfall linear infinite; }
+        @keyframes snowfall { 0% { transform: translateY(-10px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(360deg); opacity: 0.3; } }
+    </style>
+</head>
+<body class="theme-blue">
+<div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-3 bottom-10 left-4 w-64 bg-[--bg-secondary] px-3 py-4 shadow-lg z-50 overflow-y-auto border border-gray-800/50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out rounded-2xl">
+        <button id="closeSidebar" class="md:hidden absolute top-4 right-4 text-[--text-secondary]"><i data-lucide="x" class="w-6 h-6"></i></button>
+        <div class="mb-6 flex items-center gap-3 px-3 pt-2">
+            <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px;flex-shrink:0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+            </div>
+            <span class="text-base font-bold tracking-tight text-[--text-primary]">dstat.topia</span>
+        </div>
+        <nav class="flex-1 space-y-4">
+            <div>
+                <p class="px-3 text-xs font-semibold text-[--text-secondary] uppercase mb-2">MAIN</p>
+                <div class="space-y-1">
+                    <a href="index.html" class="sidebar-item-link"><i data-lucide="home" class="h-4 w-4"></i><span>Dashboard</span></a>
+                    <a href="tools.html" class="sidebar-item-link text-white bg-blue-600/20"><i data-lucide="wrench" class="h-4 w-4"></i><span>Tools</span></a>
+                    <a href="reviews.html" class="sidebar-item-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4"><path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd"/></svg>
+                        <span>Booter Review</span>
+                    </a>
+                </div>
+            </div>
+            <div class="themes-container">
+                <div class="themes-header" id="themesHeader"><span>Themes</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                <div class="themes-dropdown" id="themesDropdown">
+                    <div class="theme-option" onclick="setTheme('blue')"><span class="color-dot dot-blue"></span><span>Blue Theme</span></div>
+                    <div class="theme-option" onclick="setTheme('gray')"><span class="color-dot dot-gray"></span><span>Gray/Black Theme</span></div>
+                    <div class="theme-option" onclick="setTheme('red')"><span class="color-dot dot-red"></span><span>Purple Theme</span></div>
+                </div>
+            </div>
+            <div style="margin-top:24px;">
+                <p class="px-3 text-xs font-semibold text-[--text-secondary] uppercase mb-2">LIVE DSTAT</p>
+                <div class="space-y-1" id="servers-nav"></div>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-6 md:ml-72 flex flex-col min-h-screen">
+        <button id="openSidebar" class="md:hidden fixed top-4 left-4 z-50 text-[--text-secondary] bg-[--bg-secondary] p-2 rounded-lg border border-gray-800"><i data-lucide="menu" class="w-6 h-6"></i></button>
+
+        <div class="flex-1 space-y-6">
+            <!-- Header Bar -->
+            <div class="flex items-center justify-between gap-3 mb-2">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="wrench" class="h-6 w-6 text-[--accent-color]"></i>
+                    <h1 class="text-xl font-bold tracking-tight">Tools Hub (SPA)</h1>
+                </div>
+                <button id="snowBtn" onclick="toggleSnow()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:6px;" class="text-[--text-secondary] hover:text-white transition-colors text-xs font-semibold">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07M12 6l-2-2M12 6l2-2M12 18l-2 2M12 18l2 2M6 12l-2-2M6 12l-2 2M18 12l2-2M18 12l2 2"/></svg>
+                    <span>Snow Effect</span>
+                </button>
+            </div>
+
+            <!-- Top Search & Category Filter Section -->
+            <div class="bg-[--bg-secondary] border border-gray-800/60 rounded-xl p-4 space-y-3">
+                <div class="relative">
+                    <i data-lucide="search" class="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400"></i>
+                    <input id="search" type="text" placeholder="Search tools by name, keyword, or category (e.g. 'JWT', 'Subnet', 'AES', 'QR')..." class="tool-input pl-10 pr-4 py-2.5 text-sm" oninput="filterTools()"/>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 pt-1" id="category-chips">
+                    <span class="tag-chip active" onclick="filterCategory('all', this)">All Tools</span>
+                    <span class="tag-chip" onclick="filterCategory('network', this)">Network & Web</span>
+                    <span class="tag-chip" onclick="filterCategory('security', this)">Security & Crypto</span>
+                    <span class="tag-chip" onclick="filterCategory('data', this)">Data & Format</span>
+                    <span class="tag-chip" onclick="filterCategory('generators', this)">Generators & Media</span>
+                    <span class="tag-chip" onclick="filterCategory('calculators', this)">Calculators & Text</span>
+                </div>
+            </div>
+
+            <!-- Dynamic Layout: Sidebar Navigation + Active Tool Panel -->
+            <div class="flex flex-col lg:flex-row gap-6 min-h-[600px]">
+                <!-- Left Tools Navigation Bar -->
+                <div class="w-full lg:w-64 flex-shrink-0 space-y-1 overflow-y-auto max-h-[700px] pr-1" id="tools-nav-list">
+                    <!-- Network & Web -->
+                    <div class="category-header text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mt-2">Network & Web</div>
+                    <div class="tool-tab active" data-id="info-lookup" data-cat="network" onclick="switchToolTab('info-lookup')"><i data-lucide="search" class="h-4 w-4"></i><span>Info Lookup</span></div>
+                    <div class="tool-tab" data-id="dns-resolver" data-cat="network" onclick="switchToolTab('dns-resolver')"><i data-lucide="globe" class="h-4 w-4"></i><span>DNS Resolver</span></div>
+                    <div class="tool-tab" data-id="fingerprint-parser" data-cat="network" onclick="switchToolTab('fingerprint-parser')"><i data-lucide="fingerprint" class="h-4 w-4"></i><span>Public IP & Fingerprint</span></div>
+                    <div class="tool-tab" data-id="webhook-sender" data-cat="network" onclick="switchToolTab('webhook-sender')"><i data-lucide="send" class="h-4 w-4"></i><span>Webhook Sender / Tester</span></div>
+                    <div class="tool-tab" data-id="dev-reference" data-cat="network" onclick="switchToolTab('dev-reference')"><i data-lucide="book-open" class="h-4 w-4"></i><span>Dev Reference</span></div>
+
+                    <!-- Security & Crypto -->
+                    <div class="category-header text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mt-3">Security & Crypto</div>
+                    <div class="tool-tab" data-id="aes-crypto" data-cat="security" onclick="switchToolTab('aes-crypto')"><i data-lucide="lock" class="h-4 w-4"></i><span>AES-256-GCM Encrypt</span></div>
+                    <div class="tool-tab" data-id="password-generator" data-cat="security" onclick="switchToolTab('password-generator')"><i data-lucide="key" class="h-4 w-4"></i><span>Password & Diceware</span></div>
+                    <div class="tool-tab" data-id="totp-generator" data-cat="security" onclick="switchToolTab('totp-generator')"><i data-lucide="shield-check" class="h-4 w-4"></i><span>TOTP 2FA Generator</span></div>
+                    <div class="tool-tab" data-id="hash-encoder" data-cat="security" onclick="switchToolTab('hash-encoder')"><i data-lucide="hash" class="h-4 w-4"></i><span>Hash & Encoder</span></div>
+                    <div class="tool-tab" data-id="keypair-generator" data-cat="security" onclick="switchToolTab('keypair-generator')"><i data-lucide="file-key" class="h-4 w-4"></i><span>Keypair Generator</span></div>
+
+                    <!-- Data & Format -->
+                    <div class="category-header text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mt-3">Data & Format</div>
+                    <div class="tool-tab" data-id="json-formatter" data-cat="data" onclick="switchToolTab('json-formatter')"><i data-lucide="code" class="h-4 w-4"></i><span>JSON Formatter</span></div>
+                    <div class="tool-tab" data-id="jwt-decoder" data-cat="data" onclick="switchToolTab('jwt-decoder')"><i data-lucide="cpu" class="h-4 w-4"></i><span>JWT Decoder</span></div>
+                    <div class="tool-tab" data-id="csv-json" data-cat="data" onclick="switchToolTab('csv-json')"><i data-lucide="file-spreadsheet" class="h-4 w-4"></i><span>CSV ↔ JSON</span></div>
+                    <div class="tool-tab" data-id="timestamp-converter" data-cat="data" onclick="switchToolTab('timestamp-converter')"><i data-lucide="clock" class="h-4 w-4"></i><span>Timestamp Converter</span></div>
+                    <div class="tool-tab" data-id="url-parser" data-cat="data" onclick="switchToolTab('url-parser')"><i data-lucide="link" class="h-4 w-4"></i><span>URL Parser & Query</span></div>
+
+                    <!-- Generators & Media -->
+                    <div class="category-header text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mt-3">Generators & Media</div>
+                    <div class="tool-tab" data-id="qr-generator" data-cat="generators" onclick="switchToolTab('qr-generator')"><i data-lucide="qr-code" class="h-4 w-4"></i><span>QR Code Generator</span></div>
+                    <div class="tool-tab" data-id="persona-generator" data-cat="generators" onclick="switchToolTab('persona-generator')"><i data-lucide="user-check" class="h-4 w-4"></i><span>Identity Persona Gen</span></div>
+                    <div class="tool-tab" data-id="color-contrast" data-cat="generators" onclick="switchToolTab('color-contrast')"><i data-lucide="palette" class="h-4 w-4"></i><span>Color & Contrast</span></div>
+                    <div class="tool-tab" data-id="text-steganography" data-cat="generators" onclick="switchToolTab('text-steganography')"><i data-lucide="eye-off" class="h-4 w-4"></i><span>Text Steganography</span></div>
+
+                    <!-- Calculators & Text Tools -->
+                    <div class="category-header text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mt-3">Calculators & Text</div>
+                    <div class="tool-tab" data-id="subnet-calc" data-cat="calculators" onclick="switchToolTab('subnet-calc')"><i data-lucide="network" class="h-4 w-4"></i><span>Subnet Calculator</span></div>
+                    <div class="tool-tab" data-id="text-diff" data-cat="calculators" onclick="switchToolTab('text-diff')"><i data-lucide="file-diff" class="h-4 w-4"></i><span>Text Diff</span></div>
+                    <div class="tool-tab" data-id="bitwise-calc" data-cat="calculators" onclick="switchToolTab('bitwise-calc')"><i data-lucide="calculator" class="h-4 w-4"></i><span>Unit & Bitwise Calc</span></div>
+                </div>
+
+                <!-- Right Tool Execution Panel -->
+                <div class="flex-1 rounded-xl border border-gray-800/60 bg-[--bg-secondary] p-6 shadow-xl" id="tool-panel-container">
+                    <!-- Panel 1: Info Lookup -->
+                    <div id="panel-info-lookup" class="tool-panel active">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="search" class="h-5 w-5 text-blue-400"></i>Info Lookup</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Detect IP, domain, or ASN records for quick diagnostics via ipapi.co & Google DoH.</p>
+                        <div class="flex gap-3 mb-6"><input id="lookup-input" class="tool-input" type="text" placeholder="Enter IP, domain, or ASN (e.g., 8.8.8.8, google.com)..."/><button class="tool-btn" onclick="runLookup()"><span id="lookup-btn-text">Lookup</span></button></div>
+                        <div id="lookup-results" class="hidden">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div class="result-card"><div class="result-label">IP</div><div class="result-value" id="r-ip">—</div></div>
+                                <div class="result-card"><div class="result-label">ASN</div><div class="result-value" id="r-asn">—</div></div>
+                                <div class="result-card"><div class="result-label">ISP</div><div class="result-value" id="r-isp">—</div></div>
+                                <div class="result-card"><div class="result-label">Organisation</div><div class="result-value" id="r-org">—</div></div>
+                                <div class="result-card"><div class="result-label">Country</div><div class="result-value" id="r-country">—</div></div>
+                                <div class="result-card"><div class="result-label">Region</div><div class="result-value" id="r-region">—</div></div>
+                                <div class="result-card"><div class="result-label">City</div><div class="result-value" id="r-city">—</div></div>
+                                <div class="result-card"><div class="result-label">ZIP</div><div class="result-value" id="r-zip">—</div></div>
+                                <div class="result-card"><div class="result-label">Timezone</div><div class="result-value" id="r-tz">—</div></div>
+                            </div>
+                            <div class="result-card mt-3"><div class="result-label">Coordinates</div><div class="result-value" id="r-coords">—</div></div>
+                            <div class="result-card mt-3"><div class="result-label">Resolved IPs</div><div class="result-value" id="r-resolved">—</div></div>
+                        </div>
+                        <div id="lookup-error" class="hidden text-sm text-red-400 mt-4"></div>
+                    </div>
+
+                    <!-- Panel 2: DNS Resolver -->
+                    <div id="panel-dns-resolver" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="globe" class="h-5 w-5 text-blue-400"></i>DNS Resolver</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Pick record types to resolve via Google DoH, or query all records for a full snapshot.</p>
+                        <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                            <input id="dns-input" class="tool-input" type="text" placeholder="Enter domain (e.g. cloudflare.com)..."/>
+                            <div class="flex gap-2">
+                                <button class="tool-btn-secondary" onclick="runDns(false)"><span id="dns-sel-text">Resolve Selected</span></button>
+                                <button class="tool-btn" onclick="runDns(true)"><span id="dns-all-text">Resolve All</span></button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-6" id="dns-chips">
+                            <div class="dns-chip selected" data-type="A">A</div>
+                            <div class="dns-chip selected" data-type="AAAA">AAAA</div>
+                            <div class="dns-chip" data-type="CNAME">CNAME</div>
+                            <div class="dns-chip" data-type="TXT">TXT</div>
+                            <div class="dns-chip" data-type="MX">MX</div>
+                            <div class="dns-chip" data-type="NS">NS</div>
+                            <div class="dns-chip" data-type="SOA">SOA</div>
+                        </div>
+                        <div id="dns-results" class="hidden"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="dns-grid"></div></div>
+                        <div id="dns-error" class="hidden text-sm text-red-400 mt-4"></div>
+                    </div>
+
+                    <!-- Panel 3: Public IP & Fingerprint Parser -->
+                    <div id="panel-fingerprint-parser" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="fingerprint" class="h-5 w-5 text-blue-400"></i>Public IP & Fingerprint Parser</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Analyze client environment, User-Agent header, display specs, WebGL GPU details, and generate Canvas Fingerprint.</p>
+                        <button class="tool-btn mb-6" onclick="loadFingerprint()"><i data-lucide="refresh-cw" class="h-4 w-4"></i>Fetch & Parse Browser Fingerprint</button>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="fp-results">
+                            <div class="result-card"><div class="result-label">User-Agent</div><div class="result-value" id="fp-ua">—</div></div>
+                            <div class="result-card"><div class="result-label">Platform & OS</div><div class="result-value" id="fp-platform">—</div></div>
+                            <div class="result-card"><div class="result-label">Screen Resolution</div><div class="result-value" id="fp-screen">—</div></div>
+                            <div class="result-card"><div class="result-label">Color Depth</div><div class="result-value" id="fp-colordepth">—</div></div>
+                            <div class="result-card"><div class="result-label">Device Memory</div><div class="result-value" id="fp-memory">—</div></div>
+                            <div class="result-card"><div class="result-label">Hardware Concurrency</div><div class="result-value" id="fp-cpu">—</div></div>
+                            <div class="result-card"><div class="result-label">Language / Locale</div><div class="result-value" id="fp-lang">—</div></div>
+                            <div class="result-card"><div class="result-label">Timezone</div><div class="result-value" id="fp-tz">—</div></div>
+                            <div class="result-card"><div class="result-label">Cookies / Do Not Track</div><div class="result-value" id="fp-dnt">—</div></div>
+                            <div class="result-card"><div class="result-label">WebGL Vendor</div><div class="result-value" id="fp-gpu-vendor">—</div></div>
+                            <div class="result-card sm:col-span-2"><div class="result-label">WebGL Renderer (GPU)</div><div class="result-value" id="fp-gpu-renderer">—</div></div>
+                            <div class="result-card sm:col-span-3"><div class="result-label">Canvas Fingerprint Hash (2D Render Test)</div><div class="result-value text-blue-400 font-bold" id="fp-canvas-hash">—</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 4: Webhook Sender / Tester -->
+                    <div id="panel-webhook-sender" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="send" class="h-5 w-5 text-blue-400"></i>Webhook Sender / Tester</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Dispatch test payloads to Discord Webhooks or custom HTTP POST endpoints with custom headers & payload inspection.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Webhook Target URL</label>
+                                <input id="wh-url" class="tool-input" type="url" placeholder="https://discord.com/api/webhooks/... or https://httpbin.org/post"/>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Preset Payload Template</label>
+                                    <select id="wh-preset" class="tool-select" onchange="applyWebhookPreset()">
+                                        <option value="discord">Discord Embed Payload</option>
+                                        <option value="json">Standard JSON Event</option>
+                                        <option value="custom">Plain Text</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Content Type</label>
+                                    <input id="wh-content-type" class="tool-input" value="application/json"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Request Body Payload</label>
+                                <textarea id="wh-body" class="tool-textarea font-mono text-xs" rows="6"></textarea>
+                            </div>
+                            <button class="tool-btn" onclick="sendWebhook()"><i data-lucide="send" class="h-4 w-4"></i><span id="wh-btn-text">Execute Webhook Request</span></button>
+                            <div id="wh-response-card" class="result-card hidden mt-4">
+                                <div class="result-label">HTTP Response Status & Output</div>
+                                <div id="wh-status" class="text-sm font-bold text-green-400 mb-2">—</div>
+                                <pre id="wh-output" class="text-xs font-mono whitespace-pre-wrap overflow-x-auto text-gray-300"></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 5: Dev Reference -->
+                    <div id="panel-dev-reference" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="book-open" class="h-5 w-5 text-blue-400"></i>Dev Reference Hub</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Quick searchable database for HTTP status codes, MIME media types, and standard ASCII table.</p>
+                        <div class="flex gap-2 mb-4">
+                            <button class="dns-chip selected" id="dev-ref-tab-http" onclick="switchDevRefTab('http')">HTTP Status Codes</button>
+                            <button class="dns-chip" id="dev-ref-tab-mime" onclick="switchDevRefTab('mime')">MIME Types</button>
+                            <button class="dns-chip" id="dev-ref-tab-ascii" onclick="switchDevRefTab('ascii')">ASCII Table</button>
+                        </div>
+                        <input id="dev-ref-filter" type="text" class="tool-input mb-4" placeholder="Filter reference list..." oninput="filterDevRef()"/>
+                        <div id="dev-ref-content" class="overflow-y-auto max-h-[450px]"></div>
+                    </div>
+
+                    <!-- Panel 6: AES-256-GCM Encrypt / Decrypt -->
+                    <div id="panel-aes-crypto" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="lock" class="h-5 w-5 text-blue-400"></i>AES-256-GCM Encryption / Decryption</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Authenticated symmetric encryption powered by native Web Crypto API (PBKDF2 key derivation + 12-byte IV).</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Passphrase / Secret Key</label>
+                                <input id="aes-pass" type="password" class="tool-input" placeholder="Enter encryption/decryption passphrase..."/>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Input Text / Ciphertext (Base64)</label>
+                                <textarea id="aes-input" class="tool-textarea font-mono text-xs" rows="4" placeholder="Enter plaintext to encrypt or ciphertext to decrypt..."></textarea>
+                            </div>
+                            <div class="flex gap-3">
+                                <button class="tool-btn" onclick="runAes('encrypt')"><i data-lucide="lock" class="h-4 w-4"></i>Encrypt Text</button>
+                                <button class="tool-btn-secondary" onclick="runAes('decrypt')"><i data-lucide="unlock" class="h-4 w-4"></i>Decrypt Ciphertext</button>
+                            </div>
+                            <div id="aes-output-card" class="result-card hidden mt-4">
+                                <div class="result-label" id="aes-output-label">Output Result</div>
+                                <textarea id="aes-output" class="tool-textarea font-mono text-xs text-green-400" rows="4" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 7: Password & Diceware Generator -->
+                    <div id="panel-password-generator" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="key" class="h-5 w-5 text-blue-400"></i>Password & Diceware Generator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Cryptographically secure random passwords and EFF Diceware passphrases with real-time entropy calculation.</p>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Mode</label>
+                                    <select id="pwd-mode" class="tool-select" onchange="togglePwdMode()">
+                                        <option value="password">Random Password (Characters)</option>
+                                        <option value="diceware">Diceware Passphrase (Words)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block" id="pwd-len-label">Length: 16 characters</label>
+                                    <input id="pwd-length" type="range" min="8" max="64" value="16" class="w-full accent-blue-500" oninput="updatePwdLengthLabel(); generatePassword();"/>
+                                </div>
+                            </div>
+                            <div id="pwd-opts-char" class="flex flex-wrap gap-4 text-xs font-semibold text-gray-300">
+                                <label class="flex items-center gap-2 cursor-pointer"><input id="pwd-uppercase" type="checkbox" checked onchange="generatePassword()"/> Uppercase (A-Z)</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input id="pwd-lowercase" type="checkbox" checked onchange="generatePassword()"/> Lowercase (a-z)</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input id="pwd-numbers" type="checkbox" checked onchange="generatePassword()"/> Numbers (0-9)</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input id="pwd-symbols" type="checkbox" checked onchange="generatePassword()"/> Symbols (!@#$%...)</label>
+                            </div>
+                            <button class="tool-btn" onclick="generatePassword()"><i data-lucide="refresh-cw" class="h-4 w-4"></i>Generate New Password</button>
+                            <div class="result-card mt-4">
+                                <div class="result-label">Generated Output</div>
+                                <div id="pwd-result" class="text-base font-mono text-blue-400 font-bold break-all select-all mb-2">—</div>
+                                <div class="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-800">
+                                    <span id="pwd-entropy">Entropy: 0 bits</span>
+                                    <span id="pwd-strength" class="font-semibold text-green-400">Strength: Very Strong</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 8: TOTP Generator -->
+                    <div id="panel-totp-generator" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="shield-check" class="h-5 w-5 text-blue-400"></i>TOTP 2FA Token Generator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Calculate 6-digit Time-based One-Time Passwords from Base32 secret keys using native Web Crypto HMAC-SHA1.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Base32 Secret Key</label>
+                                <input id="totp-secret" type="text" class="tool-input font-mono uppercase" placeholder="e.g. JBSWY3DPEHPK3PXP" value="JBSWY3DPEHPK3PXP" oninput="updateTotpCode()"/>
+                            </div>
+                            <div class="result-card text-center py-6">
+                                <div class="result-label">Current 2FA Token Code</div>
+                                <div id="totp-code" class="text-4xl font-mono font-bold tracking-widest text-blue-400 my-2">------</div>
+                                <div class="flex items-center justify-center gap-2 text-xs text-gray-400 mt-2">
+                                    <span>Expires in: <strong id="totp-timer" class="text-white">30s</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 9: Hash & Encoder -->
+                    <div id="panel-hash-encoder" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="hash" class="h-5 w-5 text-blue-400"></i>Hash & Encoding Toolkit</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Generate cryptographic hashes (MD5, SHA-1, SHA-256, SHA-512) and perform Base64, URL, & Hex conversions in real time.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Input Text / Raw Data</label>
+                                <textarea id="hash-input" class="tool-textarea font-mono text-xs" rows="3" placeholder="Enter string to hash or encode..." oninput="computeHashesAndEncodings()"></textarea>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="hash-results-grid">
+                                <div class="result-card"><div class="result-label">MD5</div><div class="result-value" id="h-md5">—</div></div>
+                                <div class="result-card"><div class="result-label">SHA-1</div><div class="result-value" id="h-sha1">—</div></div>
+                                <div class="result-card"><div class="result-label">SHA-256</div><div class="result-value" id="h-sha256">—</div></div>
+                                <div class="result-card"><div class="result-label">SHA-512</div><div class="result-value" id="h-sha512">—</div></div>
+                                <div class="result-card"><div class="result-label">Base64 Encoded</div><div class="result-value" id="h-base64">—</div></div>
+                                <div class="result-card"><div class="result-label">Hex Encoded</div><div class="result-value" id="h-hex">—</div></div>
+                                <div class="result-card sm:col-span-2"><div class="result-label">URL Encoded</div><div class="result-value" id="h-url">—</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 10: Keypair Generator -->
+                    <div id="panel-keypair-generator" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="file-key" class="h-5 w-5 text-blue-400"></i>RSA / ECDSA Keypair Generator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Generate asymmetric cryptographic keypairs in PEM format using browser Web Crypto API.</p>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Algorithm</label>
+                                    <select id="kp-algo" class="tool-select" onchange="updateKeyPairOptions()">
+                                        <option value="RSA-OAEP">RSA Encryption (2048 / 4096-bit)</option>
+                                        <option value="ECDSA">ECDSA Signing (P-256 / P-384)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Key Size / Curve</label>
+                                    <select id="kp-size" class="tool-select">
+                                        <option value="2048">2048 bits</option>
+                                        <option value="4096">4096 bits</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="tool-btn" onclick="generateKeypair()"><i data-lucide="key-round" class="h-4 w-4"></i><span id="kp-btn-text">Generate Keypair</span></button>
+                            <div id="kp-output-container" class="space-y-3 hidden">
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Public Key (PEM)</label>
+                                    <textarea id="kp-public" class="tool-textarea font-mono text-xs text-blue-400" rows="6" readonly></textarea>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Private Key (PKCS#8 PEM)</label>
+                                    <textarea id="kp-private" class="tool-textarea font-mono text-xs text-green-400" rows="8" readonly></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 11: JSON Formatter & Validator -->
+                    <div id="panel-json-formatter" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="code" class="h-5 w-5 text-blue-400"></i>JSON Formatter & Validator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Beautify, minify, and validate JSON data structures with syntax verification.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">JSON Data Input</label>
+                                <textarea id="json-input" class="tool-textarea font-mono text-xs" rows="8" placeholder='{"name":"dstat.topia","type":"SPA","active":true}'></textarea>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <button class="tool-btn" onclick="processJson('prettify', 2)"><i data-lucide="align-left" class="h-4 w-4"></i>Prettify (2 Spaces)</button>
+                                <button class="tool-btn-secondary" onclick="processJson('prettify', 4)">Prettify (4 Spaces)</button>
+                                <button class="tool-btn-secondary" onclick="processJson('minify')"><i data-lucide="minimize-2" class="h-4 w-4"></i>Minify</button>
+                            </div>
+                            <div id="json-status-card" class="result-card hidden">
+                                <div class="result-label" id="json-status-title">Validation Status</div>
+                                <div id="json-status-msg" class="text-xs font-mono font-bold mb-2"></div>
+                                <textarea id="json-output" class="tool-textarea font-mono text-xs" rows="8" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 12: JWT Decoder -->
+                    <div id="panel-jwt-decoder" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="cpu" class="h-5 w-5 text-blue-400"></i>JWT Decoder</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Parse JSON Web Tokens client-side to inspect Header, Payload claims, and Expiration status.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Encoded JWT Token String</label>
+                                <textarea id="jwt-input" class="tool-textarea font-mono text-xs" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." oninput="decodeJwt()"></textarea>
+                            </div>
+                            <div id="jwt-results" class="space-y-3 hidden">
+                                <div id="jwt-exp-badge" class="result-card font-bold text-xs"></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs font-semibold uppercase text-red-400 mb-1 block">Header (Algorithm & Type)</label>
+                                        <textarea id="jwt-header" class="tool-textarea font-mono text-xs text-red-300" rows="6" readonly></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold uppercase text-purple-400 mb-1 block">Payload (Claims & Data)</label>
+                                        <textarea id="jwt-payload" class="tool-textarea font-mono text-xs text-purple-300" rows="6" readonly></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="jwt-error" class="hidden text-sm text-red-400"></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 13: CSV ↔ JSON Converter -->
+                    <div id="panel-csv-json" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="file-spreadsheet" class="h-5 w-5 text-blue-400"></i>CSV ↔ JSON Converter</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Bidirectional conversion between Comma-Separated Values (CSV) and JSON array datasets.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Input Data (CSV or JSON)</label>
+                                <textarea id="cj-input" class="tool-textarea font-mono text-xs" rows="6" placeholder="id,name,role&#10;1,Alice,Admin&#10;2,Bob,User"></textarea>
+                            </div>
+                            <div class="flex gap-3">
+                                <button class="tool-btn" onclick="convertCsvJson('csv2json')">CSV ➔ JSON</button>
+                                <button class="tool-btn-secondary" onclick="convertCsvJson('json2csv')">JSON ➔ CSV</button>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Converted Output</label>
+                                <textarea id="cj-output" class="tool-textarea font-mono text-xs text-blue-400" rows="6" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 14: Timestamp Converter -->
+                    <div id="panel-timestamp-converter" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="clock" class="h-5 w-5 text-blue-400"></i>Unix Timestamp Converter & Live UTC Clock</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Convert Unix epoch timestamps (seconds or milliseconds) to ISO 8601 & human-readable dates.</p>
+                        <div class="space-y-4">
+                            <div class="result-card flex flex-col sm:flex-row justify-between items-center py-4 bg-blue-900/10 border-blue-800/40">
+                                <div>
+                                    <div class="result-label">Live UTC Clock</div>
+                                    <div id="live-utc-clock" class="text-xl font-mono font-bold text-blue-400">--:--:-- UTC</div>
+                                </div>
+                                <div class="text-right mt-2 sm:mt-0">
+                                    <div class="result-label">Current Epoch Seconds</div>
+                                    <div id="live-utc-epoch" class="text-lg font-mono text-white">0</div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Unix Timestamp (sec/ms)</label>
+                                    <input id="ts-epoch-input" type="text" class="tool-input font-mono" placeholder="e.g. 1700000000" oninput="convertTimestamp('epoch')"/>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Human Date String / ISO</label>
+                                    <input id="ts-date-input" type="text" class="tool-input" placeholder="e.g. 2024-01-01T12:00:00Z" oninput="convertTimestamp('date')"/>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="result-card"><div class="result-label">ISO 8601 UTC</div><div class="result-value" id="ts-res-iso">—</div></div>
+                                <div class="result-card"><div class="result-label">Local Time String</div><div class="result-value" id="ts-res-local">—</div></div>
+                                <div class="result-card"><div class="result-label">UTC String</div><div class="result-value" id="ts-res-utc">—</div></div>
+                                <div class="result-card"><div class="result-label">Relative Time</div><div class="result-value" id="ts-res-rel">—</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 15: URL Parser & Query Splitter -->
+                    <div id="panel-url-parser" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="link" class="h-5 w-5 text-blue-400"></i>URL Parser & Query Parameter Splitter</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Parse complex web URLs into components (Protocol, Host, Port, Path, Query Params table, Hash fragment).</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Target URL String</label>
+                                <input id="url-input" type="url" class="tool-input font-mono text-xs" placeholder="https://dstat.topia:8080/tools?category=security&ref=spa#hash" value="https://dstat.topia:8080/tools?category=security&ref=spa#hash" oninput="parseUrl()"/>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div class="result-card"><div class="result-label">Protocol</div><div class="result-value" id="u-protocol">—</div></div>
+                                <div class="result-card"><div class="result-label">Hostname</div><div class="result-value" id="u-host">—</div></div>
+                                <div class="result-card"><div class="result-label">Port</div><div class="result-value" id="u-port">—</div></div>
+                                <div class="result-card"><div class="result-label">Pathname</div><div class="result-value" id="u-path">—</div></div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label mb-2">Query Search Parameters</div>
+                                <div id="u-params-container" class="overflow-x-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 16: QR Code Generator -->
+                    <div id="panel-qr-generator" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="qr-code" class="h-5 w-5 text-blue-400"></i>QR Code Canvas Generator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Generate clean, scannable QR Codes directly onto HTML5 Canvas element in real time.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Text / URL Payload</label>
+                                <input id="qr-input" type="text" class="tool-input" placeholder="e.g. https://dstat.topia" value="https://dstat.topia" oninput="renderQrCode()"/>
+                            </div>
+                            <div class="flex flex-col items-center justify-center p-6 bg-[--bg-primary] border border-gray-800 rounded-xl">
+                                <canvas id="qr-canvas" width="200" height="200" class="border border-gray-700 rounded-lg bg-white p-2 mb-4"></canvas>
+                                <a id="qr-download-btn" download="qrcode.png" class="tool-btn text-xs"><i data-lucide="download" class="h-4 w-4"></i>Download PNG Image</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 17: Identity Persona Generator -->
+                    <div id="panel-persona-generator" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="user-check" class="h-5 w-5 text-blue-400"></i>Identity & Fake Persona Generator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Generate realistic test personas with mock names, addresses, emails, credit card numbers, DOB, and SSN.</p>
+                        <button class="tool-btn mb-4" onclick="generatePersona()"><i data-lucide="refresh-cw" class="h-4 w-4"></i>Generate Random Persona</button>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="persona-grid">
+                            <div class="result-card"><div class="result-label">Full Name</div><div class="result-value" id="p-name">—</div></div>
+                            <div class="result-card"><div class="result-label">Gender / Age</div><div class="result-value" id="p-gender">—</div></div>
+                            <div class="result-card"><div class="result-label">Date of Birth</div><div class="result-value" id="p-dob">—</div></div>
+                            <div class="result-card sm:col-span-2"><div class="result-label">Street Address</div><div class="result-value" id="p-address">—</div></div>
+                            <div class="result-card"><div class="result-label">City, State, Zip</div><div class="result-value" id="p-city">—</div></div>
+                            <div class="result-card"><div class="result-label">Email Address</div><div class="result-value text-blue-400" id="p-email">—</div></div>
+                            <div class="result-card"><div class="result-label">Phone Number</div><div class="result-value" id="p-phone">—</div></div>
+                            <div class="result-card"><div class="result-label">SSN / ID Number</div><div class="result-value" id="p-ssn">—</div></div>
+                            <div class="result-card sm:col-span-2"><div class="result-label">Test Credit Card Number (Luhn Valid)</div><div class="result-value font-bold text-green-400" id="p-card">—</div></div>
+                            <div class="result-card"><div class="result-label">Card Expiry & CVV</div><div class="result-value" id="p-card-extra">—</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 18: Color Picker & Contrast Checker -->
+                    <div id="panel-color-contrast" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="palette" class="h-5 w-5 text-blue-400"></i>Color Picker & WCAG Contrast Checker</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Convert HEX / RGB / HSL values and evaluate WCAG 2.1 accessibility contrast compliance.</p>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Foreground (Text) Color</label>
+                                    <div class="flex gap-2">
+                                        <input id="clr-fg-picker" type="color" value="#3b82f6" class="h-10 w-12 rounded cursor-pointer border-0 bg-transparent" oninput="syncColorInput('fg')"/>
+                                        <input id="clr-fg-hex" type="text" value="#3b82f6" class="tool-input font-mono" oninput="syncColorPicker('fg')"/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Background Color</label>
+                                    <div class="flex gap-2">
+                                        <input id="clr-bg-picker" type="color" value="#0a0b1a" class="h-10 w-12 rounded cursor-pointer border-0 bg-transparent" oninput="syncColorInput('bg')"/>
+                                        <input id="clr-bg-hex" type="text" value="#0a0b1a" class="tool-input font-mono" oninput="syncColorPicker('bg')"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="clr-preview" class="p-6 rounded-xl border border-gray-800 text-center font-bold text-lg" style="background-color: #0a0b1a; color: #3b82f6;">
+                                Sample Preview Text for WCAG Contrast
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="result-card"><div class="result-label">Contrast Ratio</div><div class="result-value text-xl font-bold text-blue-400" id="clr-ratio">0 : 1</div></div>
+                                <div class="result-card"><div class="result-label">WCAG AA Rating</div><div class="result-value font-bold" id="clr-wcag-aa">—</div></div>
+                                <div class="result-card"><div class="result-label">WCAG AAA Rating</div><div class="result-value font-bold" id="clr-wcag-aaa">—</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 19: Text Steganography (Zero-Width) -->
+                    <div id="panel-text-steganography" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="eye-off" class="h-5 w-5 text-blue-400"></i>Zero-Width Text Steganography</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Hide secret messages invisibly inside normal visible text using zero-width Unicode characters (\u200B, \u200C, \u200D).</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Visible Cover Text</label>
+                                <input id="steg-cover" type="text" class="tool-input" placeholder="e.g. Hello world, nice weather today!"/>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Secret Hidden Payload Text</label>
+                                <input id="steg-secret" type="text" class="tool-input" placeholder="e.g. TOP_SECRET_PASSWORD_123"/>
+                            </div>
+                            <div class="flex gap-3">
+                                <button class="tool-btn" onclick="encodeSteganography()"><i data-lucide="eye-off" class="h-4 w-4"></i>Hide Secret in Text</button>
+                                <button class="tool-btn-secondary" onclick="decodeSteganography()"><i data-lucide="eye" class="h-4 w-4"></i>Reveal Secret Message</button>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Steganographic Output / Decoded Result</div>
+                                <textarea id="steg-output" class="tool-textarea font-mono text-xs text-blue-400" rows="3" placeholder="Steganographic output will appear here..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 20: Subnet Calculator -->
+                    <div id="panel-subnet-calc" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="network" class="h-5 w-5 text-blue-400"></i>CIDR IPv4 Subnet Calculator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Calculate subnet mask, wildcard mask, network ID, broadcast IP, host range, and usable host capacity.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">IPv4 Address & Subnet CIDR Prefix</label>
+                                <input id="sub-input" type="text" class="tool-input font-mono" placeholder="e.g. 192.168.1.50/24" value="192.168.1.50/24" oninput="calculateSubnet()"/>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="sub-results">
+                                <div class="result-card"><div class="result-label">Network Address</div><div class="result-value text-blue-400 font-bold" id="sub-net">—</div></div>
+                                <div class="result-card"><div class="result-label">Subnet Mask</div><div class="result-value" id="sub-mask">—</div></div>
+                                <div class="result-card"><div class="result-label">Wildcard Mask</div><div class="result-value" id="sub-wildcard">—</div></div>
+                                <div class="result-card"><div class="result-label">Broadcast Address</div><div class="result-value" id="sub-bcast">—</div></div>
+                                <div class="result-card"><div class="result-label">Usable Host Range</div><div class="result-value" id="sub-range">—</div></div>
+                                <div class="result-card"><div class="result-label">Total Usable Hosts</div><div class="result-value text-green-400 font-bold" id="sub-hosts">—</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 21: Text Diff -->
+                    <div id="panel-text-diff" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="file-diff" class="h-5 w-5 text-blue-400"></i>Line-by-Line Text Diff Comparator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Compare two text blocks to highlight added, removed, and modified lines in real time.</p>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Original Text (Text A)</label>
+                                    <textarea id="diff-text-a" class="tool-textarea font-mono text-xs" rows="6" placeholder="Original line 1&#10;Original line 2" oninput="compareDiff()"></textarea>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Modified Text (Text B)</label>
+                                    <textarea id="diff-text-b" class="tool-textarea font-mono text-xs" rows="6" placeholder="Original line 1&#10;Modified line 2&#10;New line 3" oninput="compareDiff()"></textarea>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label mb-2">Line Diff Comparison Output</div>
+                                <div id="diff-output" class="font-mono text-xs space-y-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel 22: Unit & Bitwise Calculator -->
+                    <div id="panel-bitwise-calc" class="tool-panel">
+                        <h2 class="text-lg font-semibold mb-1 flex items-center gap-2"><i data-lucide="calculator" class="h-5 w-5 text-blue-400"></i>Bitwise & Radix Unit Calculator</h2>
+                        <p class="text-sm text-[--text-secondary] mb-5">Perform bitwise operations (AND, OR, XOR, NOT, Shift) and convert numbers between Binary, Decimal, & Hex.</p>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Number A (Decimal / Hex / Bin)</label>
+                                    <input id="bit-val-a" type="text" class="tool-input font-mono" value="255" oninput="runBitwiseCalc()"/>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Operation</label>
+                                    <select id="bit-op" class="tool-select" onchange="runBitwiseCalc()">
+                                        <option value="AND">AND (&)</option>
+                                        <option value="OR">OR (|)</option>
+                                        <option value="XOR">XOR (^)</option>
+                                        <option value="NOT">NOT (~ A)</option>
+                                        <option value="SHL">Shift Left (A &lt;&lt; B)</option>
+                                        <option value="SHR">Shift Right (A &gt;&gt; B)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold uppercase text-gray-400 mb-1 block">Number B (for Binary Ops)</label>
+                                    <input id="bit-val-b" type="text" class="tool-input font-mono" value="15" oninput="runBitwiseCalc()"/>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="result-card"><div class="result-label">Decimal Result</div><div class="result-value text-xl font-bold text-blue-400" id="bit-res-dec">0</div></div>
+                                <div class="result-card"><div class="result-label">Hexadecimal (0x)</div><div class="result-value font-bold text-green-400" id="bit-res-hex">0x0</div></div>
+                                <div class="result-card"><div class="result-label">Binary Result</div><div class="result-value font-bold text-purple-400" id="bit-res-bin">0b0</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center p-4 mt-8 text-sm text-gray-600 border-t border-gray-800/50">
+            <div>Copyright &copy;2024-2025 dstat.topia All rights Reserved | Version 2.0 SPA</div>
+            <div class="flex items-center">Hand-crafted & Made with <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"/></svg></div>
+        </div>
+    </main>
+</div>
+
+<script>
+function switchTab(el,panelId){document.querySelectorAll('.tool-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));el.classList.add('active');document.getElementById('panel-'+panelId).classList.add('active');lucide.createIcons();}
+
+document.getElementById('themesHeader').addEventListener('click',function(){document.getElementById('themesDropdown').classList.toggle('show');document.getElementById('themesHeader').classList.toggle('open');});
+document.addEventListener('DOMContentLoaded',async function(){
+    lucide.createIcons();
+    loadSavedTheme();
+    try{
+        const servers=await fetch('/api/servers').then(r=>r.json());
+        renderServers(servers,'layer4');
+        lucide.createIcons();
+        const openBtn=document.getElementById('openSidebar');
+        const closeBtn=document.getElementById('closeSidebar');
+        const sidebar=document.getElementById('sidebar');
+        if(openBtn&&sidebar)openBtn.addEventListener('click',()=>sidebar.classList.remove('-translate-x-full'));
+        if(closeBtn&&sidebar)closeBtn.addEventListener('click',()=>sidebar.classList.add('-translate-x-full'));
+        document.querySelectorAll('.layer-button').forEach(function(btn){btn.addEventListener('click',function(){var c=btn.nextElementSibling;var i=btn.querySelector('.rotate-icon');var o=c.style.maxHeight&&c.style.maxHeight!=='0px';c.style.maxHeight=o?'0px':'600px';c.style.opacity=o?'0':'1';if(i)i.classList.toggle('open');});});
+        document.querySelectorAll('.category-button').forEach(function(btn){btn.addEventListener('click',function(){var c=btn.nextElementSibling;var i=btn.querySelector('.rotate-icon');var o=c.style.maxHeight&&c.style.maxHeight!=='0px';c.style.maxHeight=o?'0px':'600px';c.style.opacity=o?'0':'1';if(i)i.classList.toggle('open');});});
+    }catch(_){}
+});
+</script>
+<script>
+function setCookie(n,v,d){let e='';if(d){const dt=new Date();dt.setTime(dt.getTime()+(d*864e5));e='; expires='+dt.toUTCString();}document.cookie=n+'='+(v||'')+e+'; path=/';}
+function getCookie(n){const eq=n+'=',ca=document.cookie.split(';');for(let c of ca){c=c.trim();if(c.indexOf(eq)===0)return c.substring(eq.length);}return null;}
+function setTheme(t){document.body.classList.remove('theme-blue','theme-gray','theme-red');document.body.classList.add('theme-'+t);setCookie('dstat_theme',t,30);}
+function loadSavedTheme(){const t=getCookie('dstat_theme');setTheme(['blue','gray','red'].includes(t)?t:'blue');}
+
+
+
+function switchToolTab(id) {
+    document.querySelectorAll('.tool-tab').forEach(t => {
+        if(t.dataset.id === id) t.classList.add('active');
+        else t.classList.remove('active');
+    });
+    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+    const targetPanel = document.getElementById('panel-' + id);
+    if(targetPanel) targetPanel.classList.add('active');
+    if(window.lucide) lucide.createIcons();
+}
+
+function filterCategory(cat, el) {
+    document.querySelectorAll('#category-chips .tag-chip').forEach(c => c.classList.remove('active'));
+    if(el) el.classList.add('active');
+
+    document.querySelectorAll('.tool-tab').forEach(t => {
+        if(cat === 'all' || t.dataset.cat === cat) {
+            t.style.display = 'flex';
+        } else {
+            t.style.display = 'none';
+        }
+    });
+}
+
+function filterTools() {
+    const q = document.getElementById('search').value.toLowerCase().trim();
+    document.querySelectorAll('.tool-tab').forEach(t => {
+        const text = t.textContent.toLowerCase();
+        if(!q || text.includes(q)) {
+            t.style.display = 'flex';
+        } else {
+            t.style.display = 'none';
+        }
+    });
+}
+
+// Network Tools Logic
+document.querySelectorAll('.dns-chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('selected')));
+
+async function runLookup(){
+    const q=document.getElementById('lookup-input').value.trim();if(!q)return;
+    document.getElementById('lookup-btn-text').innerHTML='<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('lookup-results').classList.add('hidden');
+    document.getElementById('lookup-error').classList.add('hidden');
+    try{
+        let ip=q;
+        if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(q)){
+            const r=await fetch('https://dns.google/resolve?name='+encodeURIComponent(q)+'&type=A');
+            const d=await r.json();
+            if(d.Answer&&d.Answer.length) ip=d.Answer[d.Answer.length-1].data;
+        }
+        const res=await fetch('https://ipapi.co/'+ip+'/json/');
+        const d=await res.json();
+        if(d.error) throw new Error(d.reason||'Lookup failed');
+        let resolved=ip;
+        if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(q)){
+            try{
+                const r4=await fetch('https://dns.google/resolve?name='+encodeURIComponent(q)+'&type=A');
+                const r6=await fetch('https://dns.google/resolve?name='+encodeURIComponent(q)+'&type=AAAA');
+                const d4=await r4.json();const d6=await r6.json();
+                const ips=[...(d4.Answer||[]).map(x=>x.data),...(d6.Answer||[]).map(x=>x.data)];
+                if(ips.length) resolved=ips.join('\n');
+            }catch(_){}
+        }
+        document.getElementById('r-ip').textContent=d.ip||'—';
+        document.getElementById('r-asn').textContent=d.asn||'—';
+        document.getElementById('r-isp').textContent=d.org||d.asn||'—';
+        document.getElementById('r-org').textContent=d.org||'—';
+        document.getElementById('r-country').textContent=d.country_name||d.country||'—';
+        document.getElementById('r-region').textContent=d.region||'—';
+        document.getElementById('r-city').textContent=d.city||'—';
+        document.getElementById('r-zip').textContent=d.postal||'—';
+        document.getElementById('r-tz').textContent=d.timezone||'—';
+        document.getElementById('r-coords').textContent=d.latitude&&d.longitude?(d.latitude+', '+d.longitude):'—';
+        document.getElementById('r-resolved').textContent=resolved||'—';
+        document.getElementById('lookup-results').classList.remove('hidden');
+    }catch(e){
+        const err=document.getElementById('lookup-error');
+        err.textContent='Error: '+e.message;
+        err.classList.remove('hidden');
+    }
+    document.getElementById('lookup-btn-text').textContent='Lookup';
+}
+
+async function runDns(all){
+    const q=document.getElementById('dns-input').value.trim();if(!q)return;
+    const allTypes=['A','AAAA','CNAME','TXT','MX','NS','SOA'];
+    let types=all?allTypes:[...document.querySelectorAll('.dns-chip.selected')].map(c=>c.dataset.type);
+    if(!types.length)types=allTypes;
+    if(all)document.querySelectorAll('.dns-chip').forEach(c=>c.classList.add('selected'));
+    document.getElementById('dns-sel-text').innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+    document.getElementById('dns-all-text').innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+    document.getElementById('dns-results').classList.add('hidden');
+    try{
+        const grid=document.getElementById('dns-grid');grid.innerHTML='';
+        await Promise.all(types.map(async type=>{
+            const res=await fetch('https://dns.google/resolve?name='+encodeURIComponent(q)+'&type='+type);
+            const data=await res.json();
+            const answers=(data.Answer||[]).map(a=>a.data);
+            const card=document.createElement('div');card.className='result-card';
+            card.innerHTML='<div class="result-label">'+type+' Record</div><div class="result-value whitespace-pre-line">'+(answers.length?answers.join('\n'):'—')+'</div>';
+            grid.appendChild(card);
+        }));
+        document.getElementById('dns-results').classList.remove('hidden');
+    }catch(e){
+        const err=document.getElementById('dns-error');
+        err.textContent='Error: '+e.message;
+        err.classList.remove('hidden');
+    }
+    document.getElementById('dns-sel-text').textContent='Resolve Selected';
+    document.getElementById('dns-all-text').textContent='Resolve All';
+}
+
+document.getElementById('lookup-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')runLookup();});
+document.getElementById('dns-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')runDns(false);});
+
+// Fingerprint Parser Logic
+function loadFingerprint(){
+    document.getElementById('fp-ua').textContent = navigator.userAgent;
+    document.getElementById('fp-platform').textContent = (navigator.platform || 'Unknown') + ' (' + (navigator.userAgentData?.platform || 'Standard') + ')';
+    document.getElementById('fp-screen').textContent = screen.width + 'x' + screen.height + ' (Available: ' + screen.availWidth + 'x' + screen.availHeight + ')';
+    document.getElementById('fp-colordepth').textContent = screen.colorDepth + '-bit';
+    document.getElementById('fp-memory').textContent = navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'N/A';
+    document.getElementById('fp-cpu').textContent = navigator.hardwareConcurrency ? navigator.hardwareConcurrency + ' Threads' : 'N/A';
+    document.getElementById('fp-lang').textContent = navigator.language + ' (' + (navigator.languages ? navigator.languages.join(', ') : '') + ')';
+    document.getElementById('fp-tz').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    document.getElementById('fp-dnt').textContent = 'Cookies Enabled: ' + navigator.cookieEnabled + ' | DNT: ' + (navigator.doNotTrack || 'Unspecified');
+
+    // WebGL GPU info
+    try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if(gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if(debugInfo) {
+                document.getElementById('fp-gpu-vendor').textContent = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                document.getElementById('fp-gpu-renderer').textContent = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            } else {
+                document.getElementById('fp-gpu-vendor').textContent = gl.getParameter(gl.VENDOR);
+                document.getElementById('fp-gpu-renderer').textContent = gl.getParameter(gl.RENDERER);
+            }
+        } else {
+            document.getElementById('fp-gpu-vendor').textContent = 'WebGL Unavailable';
+            document.getElementById('fp-gpu-renderer').textContent = 'WebGL Unavailable';
+        }
+    } catch(e) {
+        document.getElementById('fp-gpu-vendor').textContent = 'Error';
+        document.getElementById('fp-gpu-renderer').textContent = 'Error';
+    }
+
+    // Canvas Fingerprint Hash
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 200; canvas.height = 50;
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = "top";
+        ctx.font = "14px 'Arial'";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "#f60";
+        ctx.fillRect(125,1,62,20);
+        ctx.fillStyle = "#069";
+        ctx.fillText("dstat.topia 🚀 <canvas> 1.0", 2, 15);
+        ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+        ctx.fillText("dstat.topia 🚀 <canvas> 1.0", 4, 17);
+        const dataUrl = canvas.toDataURL();
+        let hash = 0;
+        for (let i = 0; i < dataUrl.length; i++) {
+            hash = ((hash << 5) - hash) + dataUrl.charCodeAt(i);
+            hash |= 0;
+        }
+        document.getElementById('fp-canvas-hash').textContent = "0x" + Math.abs(hash).toString(16).toUpperCase();
+    } catch(e) {
+        document.getElementById('fp-canvas-hash').textContent = 'Canvas Hash Error';
+    }
+}
+
+// Webhook Sender Logic
+function applyWebhookPreset() {
+    const preset = document.getElementById('wh-preset').value;
+    const body = document.getElementById('wh-body');
+    if(preset === 'discord') {
+        body.value = JSON.stringify({
+            username: "dstat.topia Webhook Bot",
+            avatar_url: "https://i.imgur.com/4M34hi2.png",
+            content: "🚀 **Webhook Test Message** from dstat.topia Tools SPA!",
+            embeds: [{
+                title: "System Notification",
+                description: "This is a test notification payload generated client-side.",
+                color: 3883766,
+                fields: [{ name: "Status", value: "Operational", inline: true }, { name: "Environment", value: "Client-Side SPA", inline: true }]
+            }]
+        }, null, 2);
+    } else if(preset === 'json') {
+        body.value = JSON.stringify({ event: "ping", timestamp: Date.now(), source: "dstat.topia" }, null, 2);
+    } else {
+        body.value = "Hello World Webhook Payload";
+    }
+}
+
+async function sendWebhook() {
+    const url = document.getElementById('wh-url').value.trim();
+    if(!url) return alert("Please enter a target webhook URL.");
+    const contentType = document.getElementById('wh-content-type').value.trim();
+    const body = document.getElementById('wh-body').value;
+
+    const btnText = document.getElementById('wh-btn-text');
+    btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    const card = document.getElementById('wh-response-card');
+    card.classList.remove('hidden');
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': contentType },
+            body: body
+        });
+        document.getElementById('wh-status').textContent = 'HTTP ' + res.status + ' ' + res.statusText;
+        document.getElementById('wh-status').className = res.ok ? 'text-sm font-bold text-green-400 mb-2' : 'text-sm font-bold text-red-400 mb-2';
+        const txt = await res.text();
+        document.getElementById('wh-output').textContent = txt || '(No response body returned)';
+    } catch(e) {
+        document.getElementById('wh-status').textContent = 'Error sending request';
+        document.getElementById('wh-status').className = 'text-sm font-bold text-red-400 mb-2';
+        document.getElementById('wh-output').textContent = e.message + '\nNote: CORS restrictions may prevent reading external responses, but the POST request may still have been received.';
+    }
+    btnText.textContent = 'Execute Webhook Request';
+}
+
+// Dev Reference Data & Logic
+let currentDevRefTab = 'http';
+const devRefData = {
+    http: [
+        { code: "200 OK", desc: "Standard response for successful HTTP requests." },
+        { code: "201 Created", desc: "Request fulfilled, resulting in the creation of a new resource." },
+        { code: "204 No Content", desc: "Server successfully processed request but returns no content." },
+        { code: "301 Moved Permanently", desc: "Resource URI has been permanently changed." },
+        { code: "302 Found", desc: "Resource temporarily moved to a different URI." },
+        { code: "400 Bad Request", desc: "Server cannot process request due to client error." },
+        { code: "401 Unauthorized", desc: "Authentication is required and has failed or not been provided." },
+        { code: "403 Forbidden", desc: "Request was valid, but server refuses action (permissions issue)." },
+        { code: "404 Not Found", desc: "Requested resource could not be found." },
+        { code: "429 Too Many Requests", desc: "User has sent too many requests in a given amount of time (rate limiting)." },
+        { code: "500 Internal Server Error", desc: "Generic server error message when an unexpected condition was met." },
+        { code: "502 Bad Gateway", desc: "Server acting as a gateway received an invalid response from upstream." },
+        { code: "503 Service Unavailable", desc: "Server cannot handle request due to temporary overload or maintenance." },
+        { code: "504 Gateway Timeout", desc: "Gateway server did not receive timely response from upstream server." }
+    ],
+    mime: [
+        { code: "application/json", desc: "JavaScript Object Notation format" },
+        { code: "application/javascript", desc: "JavaScript source files" },
+        { code: "application/pdf", desc: "Portable Document Format" },
+        { code: "application/xml", desc: "Extensible Markup Language" },
+        { code: "application/zip", desc: "ZIP archive compressed file" },
+        { code: "text/html", desc: "HyperText Markup Language" },
+        { code: "text/css", desc: "Cascading Style Sheets" },
+        { code: "text/plain", desc: "Plain unformatted text" },
+        { code: "image/png", desc: "Portable Network Graphics" },
+        { code: "image/jpeg", desc: "JPEG images" },
+        { code: "image/svg+xml", desc: "Scalable Vector Graphics" },
+        { code: "multipart/form-data", desc: "Used for submitting forms with file uploads" }
+    ],
+    ascii: Array.from({length: 32}, (_, i) => ({ code: `DEC: ${i + 32} | HEX: 0x${(i + 32).toString(16).toUpperCase()}`, desc: `Character: '${String.fromCharCode(i + 32)}'` })).concat([
+        { code: "DEC: 65 | HEX: 0x41", desc: "Character: 'A'" },
+        { code: "DEC: 90 | HEX: 0x5A", desc: "Character: 'Z'" },
+        { code: "DEC: 97 | HEX: 0x61", desc: "Character: 'a'" },
+        { code: "DEC: 122 | HEX: 0x7A", desc: "Character: 'z'" },
+        { code: "DEC: 48 | HEX: 0x30", desc: "Character: '0'" },
+        { code: "DEC: 57 | HEX: 0x39", desc: "Character: '9'" }
+    ])
+};
+
+function switchDevRefTab(tab) {
+    currentDevRefTab = tab;
+    ['http','mime','ascii'].forEach(t => {
+        const btn = document.getElementById('dev-ref-tab-' + t);
+        if(t === tab) btn.classList.add('selected');
+        else btn.classList.remove('selected');
+    });
+    filterDevRef();
+}
+
+function filterDevRef() {
+    const q = document.getElementById('dev-ref-filter').value.toLowerCase().trim();
+    const container = document.getElementById('dev-ref-content');
+    const items = devRefData[currentDevRefTab] || [];
+    const filtered = items.filter(item => item.code.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q));
+
+    container.innerHTML = filtered.map(item => `
+        <div class="result-card mb-2 flex justify-between items-center">
+            <span class="font-mono text-sm font-bold text-blue-400">${item.code}</span>
+            <span class="text-xs text-gray-300 text-right ml-4">${item.desc}</span>
+        </div>
+    `).join('') || '<div class="text-sm text-gray-400">No matching items found.</div>';
+}
+
+// AES-256-GCM Web Crypto Implementation
+async function deriveAesKey(passphrase, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        "raw", enc.encode(passphrase), { name: "PBKDF2" }, false, ["deriveKey"]
+    );
+    return await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function runAes(mode) {
+    const pass = document.getElementById('aes-pass').value;
+    const input = document.getElementById('aes-input').value;
+    const outputCard = document.getElementById('aes-output-card');
+    const outputText = document.getElementById('aes-output');
+    const outputLabel = document.getElementById('aes-output-label');
+
+    if(!pass) return alert("Please enter a passphrase.");
+    if(!input) return alert("Please enter input text.");
+
+    outputCard.classList.remove('hidden');
+
+    try {
+        const enc = new TextEncoder();
+        const dec = new TextDecoder();
+
+        if(mode === 'encrypt') {
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveAesKey(pass, salt);
+            const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, enc.encode(input));
+
+            const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.length);
+            combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+            let binary = '';
+            combined.forEach(b => binary += String.fromCharCode(b));
+            const base64Cipher = btoa(binary);
+
+            outputLabel.textContent = "Encrypted Output (Base64)";
+            outputText.value = base64Cipher;
+        } else {
+            const binary = atob(input.trim());
+            const combined = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) combined[i] = binary.charCodeAt(i);
+
+            if(combined.length < 28) throw new Error("Invalid ciphertext payload length.");
+
+            const salt = combined.slice(0, 16);
+            const iv = combined.slice(16, 28);
+            const ciphertext = combined.slice(28);
+
+            const key = await deriveAesKey(pass, salt);
+            const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ciphertext);
+
+            outputLabel.textContent = "Decrypted Plaintext Output";
+            outputText.value = dec.decode(decrypted);
+        }
+    } catch(e) {
+        outputLabel.textContent = "Error Result";
+        outputText.value = "Decryption failed or invalid key/ciphertext format. Error: " + e.message;
+    }
+}
+
+// Password & Diceware Generator Logic
+const dicewareWordlist = ["correct", "horse", "battery", "staple", "cipher", "matrix", "vector", "quantum", "shield", "nexus", "vertex", "crypto", "binary", "terminal", "packet", "subnet", "protocol", "kernel", "gateway", "entropy", "horizon", "phantom", "spectral", "cosmic", "titan", "plasma", "dynamo", "cobalt", "vortex", "starlight"];
+
+function togglePwdMode() {
+    const mode = document.getElementById('pwd-mode').value;
+    const charOpts = document.getElementById('pwd-opts-char');
+    const range = document.getElementById('pwd-length');
+    if(mode === 'diceware') {
+        charOpts.style.display = 'none';
+        range.min = 3; range.max = 12; range.value = 5;
+    } else {
+        charOpts.style.display = 'flex';
+        range.min = 8; range.max = 64; range.value = 16;
+    }
+    updatePwdLengthLabel();
+    generatePassword();
+}
+
+function updatePwdLengthLabel() {
+    const mode = document.getElementById('pwd-mode').value;
+    const len = document.getElementById('pwd-length').value;
+    document.getElementById('pwd-len-label').textContent = mode === 'diceware' ? `Length: ${len} words` : `Length: ${len} characters`;
+}
+
+function generatePassword() {
+    const mode = document.getElementById('pwd-mode').value;
+    const len = parseInt(document.getElementById('pwd-length').value);
+    let result = '';
+    let entropyBits = 0;
+
+    if(mode === 'diceware') {
+        const words = [];
+        const randomValues = new Uint32Array(len);
+        crypto.getRandomValues(randomValues);
+        for(let i = 0; i < len; i++) {
+            words.push(dicewareWordlist[randomValues[i] % dicewareWordlist.length]);
+        }
+        result = words.join('-');
+        entropyBits = Math.round(len * Math.log2(dicewareWordlist.length));
+    } else {
+        const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const lower = "abcdefghijklmnopqrstuvwxyz";
+        const nums = "0123456789";
+        const syms = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+        let charset = '';
+        if(document.getElementById('pwd-uppercase').checked) charset += upper;
+        if(document.getElementById('pwd-lowercase').checked) charset += lower;
+        if(document.getElementById('pwd-numbers').checked) charset += nums;
+        if(document.getElementById('pwd-symbols').checked) charset += syms;
+
+        if(!charset) charset = lower;
+
+        const randomValues = new Uint32Array(len);
+        crypto.getRandomValues(randomValues);
+        for(let i = 0; i < len; i++) {
+            result += charset[randomValues[i] % charset.length];
+        }
+        entropyBits = Math.round(len * Math.log2(charset.length));
+    }
+
+    document.getElementById('pwd-result').textContent = result;
+    document.getElementById('pwd-entropy').textContent = `Entropy: ~${entropyBits} bits`;
+
+    const strengthEl = document.getElementById('pwd-strength');
+    if(entropyBits < 40) { strengthEl.textContent = 'Strength: Weak'; strengthEl.className = 'font-semibold text-red-400'; }
+    else if(entropyBits < 70) { strengthEl.textContent = 'Strength: Moderate'; strengthEl.className = 'font-semibold text-yellow-400'; }
+    else { strengthEl.textContent = 'Strength: Very Strong'; strengthEl.className = 'font-semibold text-green-400'; }
+}
+
+// TOTP Base32 Decode & HMAC-SHA1 Token Calculation
+function base32ToBytes(base32) {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    let clean = base32.toUpperCase().replace(/[^A-Z2-7]/g, "");
+    let bits = "";
+    for (let i = 0; i < clean.length; i++) {
+        let val = alphabet.indexOf(clean.charAt(i));
+        bits += val.toString(2).padStart(5, '0');
+    }
+    let bytes = new Uint8Array(Math.floor(bits.length / 8));
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(bits.substr(i * 8, 8), 2);
+    }
+    return bytes;
+}
+
+async function generateTotp(secret) {
+    try {
+        const keyBytes = base32ToBytes(secret);
+        if(keyBytes.length === 0) return "INVALID";
+        const epoch = Math.floor(Date.now() / 1000);
+        const timeStep = Math.floor(epoch / 30);
+
+        const timeBuffer = new ArrayBuffer(8);
+        const view = new DataView(timeBuffer);
+        view.setBigUint64(0, BigInt(timeStep), false);
+
+        const cryptoKey = await crypto.subtle.importKey(
+            "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+        );
+        const hmac = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, timeBuffer));
+
+        const offset = hmac[hmac.length - 1] & 0xf;
+        const codeInt = ((hmac[offset] & 0x7f) << 24) |
+                        ((hmac[offset + 1] & 0xff) << 16) |
+                        ((hmac[offset + 2] & 0xff) << 8) |
+                        (hmac[offset + 3] & 0xff);
+        const otp = (codeInt % 1000000).toString().padStart(6, '0');
+        return otp;
+    } catch(e) {
+        return "ERROR";
+    }
+}
+
+async function updateTotpCode() {
+    const secret = document.getElementById('totp-secret').value;
+    const code = await generateTotp(secret);
+    document.getElementById('totp-code').textContent = code.length === 6 ? code.slice(0,3) + ' ' + code.slice(3) : code;
+}
+
+function startTotpTimer() {
+    setInterval(async () => {
+        const remaining = 30 - (Math.floor(Date.now() / 1000) % 30);
+        document.getElementById('totp-timer').textContent = remaining + 's';
+        if(remaining === 30 || document.getElementById('totp-code').textContent === '------') {
+            await updateTotpCode();
+        }
+    }, 1000);
+}
+
+// Pure JS MD5 Algorithm Implementation for Hash Toolkit
+function md5(string) {
+    function rotateLeft(lValue, iShiftBits) {
+        return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
+    }
+    function addUnsigned(lX, lY) {
+        var lX4, lY4, lX8, lY8, lResult;
+        lX8 = (lX & 0x80000000); lY8 = (lY & 0x80000000);
+        lX4 = (lX & 0x40000000); lY4 = (lY & 0x40000000);
+        lResult = (lX & 0x3FFFFFFF) + (lY & 0x3FFFFFFF);
+        if (lX4 & lY4) return (lResult ^ 0x80000000 ^ lX8 ^ lY8);
+        if (lX4 | lY4) {
+            if (lResult & 0x40000000) return (lResult ^ 0xC0000000 ^ lX8 ^ lY8);
+            else return (lResult ^ 0x40000000 ^ lX8 ^ lY8);
+        } else return (lResult ^ lX8 ^ lY8);
+    }
+    function F(x, y, z) { return (x & y) | ((~x) & z); }
+    function G(x, y, z) { return (x & z) | (y & (~z)); }
+    function H(x, y, z) { return (x ^ y ^ z); }
+    function I(x, y, z) { return (y ^ (x | (~z))); }
+    function FF(a, b, c, d, x, s, ac) {
+        a = addUnsigned(a, addUnsigned(addUnsigned(F(b, c, d), x), ac));
+        return addUnsigned(rotateLeft(a, s), b);
+    };
+    function GG(a, b, c, d, x, s, ac) {
+        a = addUnsigned(a, addUnsigned(addUnsigned(G(b, c, d), x), ac));
+        return addUnsigned(rotateLeft(a, s), b);
+    };
+    function HH(a, b, c, d, x, s, ac) {
+        a = addUnsigned(a, addUnsigned(addUnsigned(H(b, c, d), x), ac));
+        return addUnsigned(rotateLeft(a, s), b);
+    };
+    function II(a, b, c, d, x, s, ac) {
+        a = addUnsigned(a, addUnsigned(addUnsigned(I(b, c, d), x), ac));
+        return addUnsigned(rotateLeft(a, s), b);
+    };
+    function convertToWordArray(string) {
+        var lWordCount;
+        var lMessageLength = string.length;
+        var lNumberOfWords_temp1 = lMessageLength + 8;
+        var lNumberOfWords_temp2 = (lNumberOfWords_temp1 - (lNumberOfWords_temp1 % 64)) / 64;
+        var lNumberOfWords = (lNumberOfWords_temp2 + 1) * 16;
+        var lWordArray = Array(lNumberOfWords - 1);
+        var lBytePosition = 0; var lByteCount = 0;
+        while (lByteCount < lMessageLength) {
+            lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+            lBytePosition = (lByteCount % 4) * 8;
+            lWordArray[lWordCount] = (lWordArray[lWordCount] | (string.charCodeAt(lByteCount) << lBytePosition));
+            lByteCount++;
+        }
+        lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+        lBytePosition = (lByteCount % 4) * 8;
+        lWordArray[lWordCount] = lWordArray[lWordCount] | (0x80 << lBytePosition);
+        lWordArray[lNumberOfWords - 2] = lMessageLength << 3;
+        lWordArray[lNumberOfWords - 1] = lMessageLength >>> 29;
+        return lWordArray;
+    };
+    function wordToHex(lValue) {
+        var WordToHexValue = "", WordToHexValue_temp = "", lByte, lCount;
+        for (lCount = 0; lCount <= 3; lCount++) {
+            lByte = (lValue >>> (lCount * 8)) & 255;
+            WordToHexValue_temp = "0" + lByte.toString(16);
+            WordToHexValue = WordToHexValue + WordToHexValue_temp.substr(WordToHexValue_temp.length - 2, 2);
+        }
+        return WordToHexValue;
+    };
+    var x = Array();
+    var k, AA, BB, CC, DD, a, b, c, d;
+    var S11 = 7, S12 = 12, S13 = 17, S14 = 22;
+    var S21 = 5, S22 = 9, S23 = 14, S24 = 20;
+    var S31 = 4, S32 = 11, S33 = 16, S34 = 23;
+    var S41 = 6, S42 = 10, S43 = 15, S44 = 21;
+    x = convertToWordArray(string);
+    a = 0x67452301; b = 0xEFCDAB89; c = 0x98BADCFE; d = 0x10325476;
+    for (k = 0; k < x.length; k += 16) {
+        AA = a; BB = b; CC = c; DD = d;
+        a = FF(a, b, c, d, x[k + 0], S11, 0xD76AA478); d = FF(d, a, b, c, x[k + 1], S12, 0xE8C7B756); c = FF(c, d, a, b, x[k + 2], S13, 0x242070DB); b = FF(b, c, d, a, x[k + 3], S14, 0xC1BDCEEE);
+        a = FF(a, b, c, d, x[k + 4], S11, 0xF57C0FAF); d = FF(d, a, b, c, x[k + 5], S12, 0x4787C62A); c = FF(c, d, a, b, x[k + 6], S13, 0xA8304613); b = FF(b, c, d, a, x[k + 7], S14, 0xFD469501);
+        a = FF(a, b, c, d, x[k + 8], S11, 0x698098D8); d = FF(d, a, b, c, x[k + 9], S12, 0x8B44F7AF); c = FF(c, d, a, b, x[k + 10], S13, 0xFFFF5BB1); b = FF(b, c, d, a, x[k + 11], S14, 0x895CD7BE);
+        a = FF(a, b, c, d, x[k + 12], S11, 0x6B901122); d = FF(d, a, b, c, x[k + 13], S12, 0xFD987193); c = FF(c, d, a, b, x[k + 14], S13, 0xA679438E); b = FF(b, c, d, a, x[k + 15], S14, 0x49B40821);
+        a = GG(a, b, c, d, x[k + 1], S21, 0xF61E2562); d = GG(d, a, b, c, x[k + 6], S22, 0xC040B340); c = GG(c, d, a, b, x[k + 11], S23, 0x265E5A51); b = GG(b, c, d, a, x[k + 0], S24, 0xE9B6C7AA);
+        a = GG(a, b, c, d, x[k + 5], S21, 0xD62F105D); d = GG(d, a, b, c, x[k + 10], S22, 0x2441453); c = GG(c, d, a, b, x[k + 15], S23, 0xD8A1E681); b = GG(b, c, d, a, x[k + 4], S24, 0xE7D3FBC8);
+        a = GG(a, b, c, d, x[k + 9], S21, 0x21E1CDE6); d = GG(d, a, b, c, x[k + 14], S22, 0xC33707D6); c = GG(c, d, a, b, x[k + 3], S23, 0xF4D50D87); b = GG(b, c, d, a, x[k + 8], S24, 0x455A14ED);
+        a = GG(a, b, c, d, x[k + 13], S21, 0xA9E3E905); d = GG(d, a, b, c, x[k + 2], S22, 0xFCEFA3F8); c = GG(c, d, a, b, x[k + 7], S23, 0x676F02D9); b = GG(b, c, d, a, x[k + 12], S24, 0x8D2A4C8A);
+        a = HH(a, b, c, d, x[k + 5], S31, 0xFFFA3942); d = HH(d, a, b, c, x[k + 8], S32, 0x8771F681); c = HH(c, d, a, b, x[k + 11], S33, 0x6D9D6122); b = HH(b, c, d, a, x[k + 14], S34, 0xFDE5380C);
+        a = HH(a, b, c, d, x[k + 1], S31, 0xA4BEEA44); d = HH(d, a, b, c, x[k + 4], S32, 0x4BDECFA9); c = HH(c, d, a, b, x[k + 7], S33, 0xF6BB4B60); b = HH(b, c, d, a, x[k + 10], S34, 0xBEBFBC70);
+        a = HH(a, b, c, d, x[k + 13], S31, 0x289B7EC6); d = HH(d, a, b, c, x[k + 0], S32, 0xEAA127FA); c = HH(c, d, a, b, x[k + 3], S33, 0xD4EF3085); b = HH(b, c, d, a, x[k + 6], S34, 0x04881D05);
+        a = HH(a, b, c, d, x[k + 9], S31, 0xD9D4D039); d = HH(d, a, b, c, x[k + 12], S32, 0xE6DB99E5); c = HH(c, d, a, b, x[k + 15], S33, 0x1FA27CF8); b = HH(b, c, d, a, x[k + 2], S34, 0xC4AC5665);
+        a = II(a, b, c, d, x[k + 0], S41, 0xF4292244); d = II(d, a, b, c, x[k + 7], S42, 0x432AFF97); c = II(c, d, a, b, x[k + 14], S43, 0xAB9423A7); b = II(b, c, d, a, x[k + 5], S44, 0xFC93A039);
+        a = II(a, b, c, d, x[k + 12], S41, 0x655B59C3); d = II(d, a, b, c, x[k + 3], S42, 0x8F0CCC92); c = II(c, d, a, b, x[k + 10], S43, 0xFFEFF47D); b = II(b, c, d, a, x[k + 1], S44, 0x85845DD1);
+        a = II(a, b, c, d, x[k + 8], S41, 0x6FA87E4F); d = II(d, a, b, c, x[k + 15], S42, 0xFE2CE6E0); c = II(c, d, a, b, x[k + 6], S43, 0xA3014314); b = II(b, c, d, a, x[k + 13], S44, 0x4E0811A1);
+        a = II(a, b, c, d, x[k + 4], S41, 0xF7537E82); d = II(d, a, b, c, x[k + 11], S42, 0xBD3AF235); c = II(c, d, a, b, x[k + 2], S43, 0x2AD7D2BB); b = II(b, c, d, a, x[k + 9], S44, 0xEB86D391);
+        a = addUnsigned(a, AA); b = addUnsigned(b, BB); c = addUnsigned(c, CC); d = addUnsigned(d, DD);
+    }
+    return (wordToHex(a) + wordToHex(b) + wordToHex(c) + wordToHex(d)).toLowerCase();
+}
+
+async function computeSubtleHash(algo, text) {
+    const enc = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest(algo, enc.encode(text));
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function computeHashesAndEncodings() {
+    const input = document.getElementById('hash-input').value;
+    if(!input) {
+        ['md5','sha1','sha256','sha512','base64','hex','url'].forEach(id => {
+            document.getElementById('h-' + id).textContent = '—';
+        });
+        return;
+    }
+
+    document.getElementById('h-md5').textContent = md5(input);
+    document.getElementById('h-sha1').textContent = await computeSubtleHash('SHA-1', input);
+    document.getElementById('h-sha256').textContent = await computeSubtleHash('SHA-256', input);
+    document.getElementById('h-sha512').textContent = await computeSubtleHash('SHA-512', input);
+
+    try { document.getElementById('h-base64').textContent = btoa(unescape(encodeURIComponent(input))); } catch(e) { document.getElementById('h-base64').textContent = 'Error'; }
+    try { document.getElementById('h-url').textContent = encodeURIComponent(input); } catch(e) { document.getElementById('h-url').textContent = 'Error'; }
+
+    let hex = '';
+    const enc = new TextEncoder();
+    enc.encode(input).forEach(b => hex += b.toString(16).padStart(2, '0'));
+    document.getElementById('h-hex').textContent = hex;
+}
+
+// Keypair Generator Logic
+function updateKeyPairOptions() {
+    const algo = document.getElementById('kp-algo').value;
+    const sizeSelect = document.getElementById('kp-size');
+    sizeSelect.innerHTML = '';
+    if(algo === 'RSA-OAEP') {
+        sizeSelect.innerHTML = '<option value="2048">2048 bits</option><option value="4096">4096 bits</option>';
+    } else {
+        sizeSelect.innerHTML = '<option value="P-256">P-256 Curve</option><option value="P-384">P-384 Curve</option>';
+    }
+}
+
+function arrayBufferToPem(buffer, label) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    const base64 = btoa(binary);
+    const lines = base64.match(/.{1,64}/g) || [];
+    return `-----BEGIN ${label}-----\n` + lines.join('\n') + `\n-----END ${label}-----`;
+}
+
+async function generateKeypair() {
+    const algo = document.getElementById('kp-algo').value;
+    const size = document.getElementById('kp-size').value;
+    const btnText = document.getElementById('kp-btn-text');
+    btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+    try {
+        let keyPair;
+        if(algo === 'RSA-OAEP') {
+            keyPair = await crypto.subtle.generateKey(
+                { name: "RSA-OAEP", modulusLength: parseInt(size), publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+                true, ["encrypt", "decrypt"]
+            );
+        } else {
+            keyPair = await crypto.subtle.generateKey(
+                { name: "ECDSA", namedCurve: size },
+                true, ["sign", "verify"]
+            );
+        }
+
+        const pubExport = await crypto.subtle.exportKey("spki", keyPair.publicKey);
+        const privExport = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+
+        document.getElementById('kp-public').value = arrayBufferToPem(pubExport, "PUBLIC KEY");
+        document.getElementById('kp-private').value = arrayBufferToPem(privExport, "PRIVATE KEY");
+        document.getElementById('kp-output-container').classList.remove('hidden');
+    } catch(e) {
+        alert("Failed to generate keypair: " + e.message);
+    }
+    btnText.textContent = "Generate Keypair";
+}
+
+// JSON Formatter Logic
+function processJson(action, spaces = 2) {
+    const input = document.getElementById('json-input').value.trim();
+    const statusCard = document.getElementById('json-status-card');
+    const statusTitle = document.getElementById('json-status-title');
+    const statusMsg = document.getElementById('json-status-msg');
+    const output = document.getElementById('json-output');
+
+    if(!input) return;
+    statusCard.classList.remove('hidden');
+
+    try {
+        const parsed = JSON.parse(input);
+        statusTitle.textContent = "Valid JSON";
+        statusMsg.textContent = "✓ Syntax Check Passed";
+        statusMsg.className = "text-xs font-mono font-bold text-green-400 mb-2";
+
+        if(action === 'prettify') {
+            output.value = JSON.stringify(parsed, null, spaces);
+        } else {
+            output.value = JSON.stringify(parsed);
+        }
+    } catch(e) {
+        statusTitle.textContent = "Invalid JSON";
+        statusMsg.textContent = "✗ Syntax Error: " + e.message;
+        statusMsg.className = "text-xs font-mono font-bold text-red-400 mb-2";
+        output.value = "";
+    }
+}
+
+// JWT Decoder Logic
+function decodeBase64Url(str) {
+    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) base64 += '=';
+    return decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+
+function decodeJwt() {
+    const jwt = document.getElementById('jwt-input').value.trim();
+    const resultsCard = document.getElementById('jwt-results');
+    const errorEl = document.getElementById('jwt-error');
+    const expBadge = document.getElementById('jwt-exp-badge');
+
+    if(!jwt) {
+        resultsCard.classList.add('hidden');
+        errorEl.classList.add('hidden');
+        return;
+    }
+
+    const parts = jwt.split('.');
+    if(parts.length !== 3) {
+        resultsCard.classList.add('hidden');
+        errorEl.textContent = "Invalid JWT structure (must consist of header.payload.signature)";
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const header = JSON.parse(decodeBase64Url(parts[0]));
+        const payload = JSON.parse(decodeBase64Url(parts[1]));
+
+        document.getElementById('jwt-header').value = JSON.stringify(header, null, 2);
+        document.getElementById('jwt-payload').value = JSON.stringify(payload, null, 2);
+
+        if(payload.exp) {
+            const expDate = new Date(payload.exp * 1000);
+            const now = new Date();
+            if(now > expDate) {
+                expBadge.textContent = "🔴 TOKEN EXPIRED ON: " + expDate.toLocaleString();
+                expBadge.className = "result-card font-bold text-xs text-red-400 border-red-800/50";
+            } else {
+                expBadge.textContent = "🟢 TOKEN VALID UNTIL: " + expDate.toLocaleString();
+                expBadge.className = "result-card font-bold text-xs text-green-400 border-green-800/50";
+            }
+        } else {
+            expBadge.textContent = "⚪ NO EXPIRATION CLAIM ('exp') FOUND IN PAYLOAD";
+            expBadge.className = "result-card font-bold text-xs text-gray-400 border-gray-800";
+        }
+
+        errorEl.classList.add('hidden');
+        resultsCard.classList.remove('hidden');
+    } catch(e) {
+        resultsCard.classList.add('hidden');
+        errorEl.textContent = "Error decoding JWT JSON payload: " + e.message;
+        errorEl.classList.remove('hidden');
+    }
+}
+
+// CSV <-> JSON Converter Logic
+function convertCsvJson(mode) {
+    const input = document.getElementById('cj-input').value.trim();
+    const output = document.getElementById('cj-output');
+
+    if(!input) return;
+
+    try {
+        if(mode === 'csv2json') {
+            const lines = input.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            if(lines.length < 1) return;
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const jsonArr = [];
+
+            for(let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                const obj = {};
+                headers.forEach((h, index) => {
+                    obj[h] = values[index] !== undefined ? values[index] : '';
+                });
+                jsonArr.push(obj);
+            }
+            output.value = JSON.stringify(jsonArr, null, 2);
+        } else {
+            const parsed = JSON.parse(input);
+            const arr = Array.isArray(parsed) ? parsed : [parsed];
+            if(arr.length === 0) return;
+            const headers = Object.keys(arr[0]);
+            let csv = headers.join(',') + '\n';
+
+            arr.forEach(obj => {
+                const row = headers.map(h => {
+                    let val = obj[h] !== undefined ? String(obj[h]) : '';
+                    if(val.includes(',') || val.includes('"')) val = `"${val.replace(/"/g, '""')}"`;
+                    return val;
+                });
+                csv += row.join(',') + '\n';
+            });
+            output.value = csv.trim();
+        }
+    } catch(e) {
+        output.value = "Conversion Error: " + e.message;
+    }
+}
+
+// Timestamp Converter Logic
+function updateLiveClock() {
+    const now = new Date();
+    document.getElementById('live-utc-clock').textContent = now.toISOString().substring(11, 19) + ' UTC';
+    document.getElementById('live-utc-epoch').textContent = Math.floor(now.getTime() / 1000);
+}
+
+function convertTimestamp(source) {
+    let date;
+    if(source === 'epoch') {
+        let val = document.getElementById('ts-epoch-input').value.trim();
+        if(!val) return;
+        let num = Number(val);
+        if(isNaN(num)) return;
+        if(val.length <= 10) num *= 1000;
+        date = new Date(num);
+    } else {
+        let val = document.getElementById('ts-date-input').value.trim();
+        if(!val) return;
+        date = new Date(val);
+    }
+
+    if(isNaN(date.getTime())) {
+        document.getElementById('ts-res-iso').textContent = 'Invalid Date';
+        document.getElementById('ts-res-local').textContent = 'Invalid Date';
+        document.getElementById('ts-res-utc').textContent = 'Invalid Date';
+        document.getElementById('ts-res-rel').textContent = 'Invalid Date';
+        return;
+    }
+
+    document.getElementById('ts-res-iso').textContent = date.toISOString();
+    document.getElementById('ts-res-local').textContent = date.toLocaleString();
+    document.getElementById('ts-res-utc').textContent = date.toUTCString();
+
+    const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+    if(diffSec >= 0) {
+        document.getElementById('ts-res-rel').textContent = `${diffSec} seconds ago`;
+    } else {
+        document.getElementById('ts-res-rel').textContent = `In ${Math.abs(diffSec)} seconds`;
+    }
+}
+
+// URL Parser Logic
+function parseUrl() {
+    const raw = document.getElementById('url-input').value.trim();
+    if(!raw) return;
+
+    try {
+        const u = new URL(raw);
+        document.getElementById('u-protocol').textContent = u.protocol;
+        document.getElementById('u-host').textContent = u.hostname;
+        document.getElementById('u-port').textContent = u.port || (u.protocol === 'https:' ? '443' : '80');
+        document.getElementById('u-path').textContent = u.pathname || '/';
+
+        const paramsContainer = document.getElementById('u-params-container');
+        const entries = Array.from(u.searchParams.entries());
+
+        if(entries.length === 0) {
+            paramsContainer.innerHTML = '<div class="text-xs text-gray-400 font-mono py-1">No query parameters present.</div>';
+        } else {
+            paramsContainer.innerHTML = `
+                <table class="w-full text-xs font-mono text-left">
+                    <thead><tr class="border-b border-gray-800 text-gray-400"><th class="pb-2">Key Parameter</th><th class="pb-2">Value</th></tr></thead>
+                    <tbody>
+                        ${entries.map(([k, v]) => `<tr class="border-b border-gray-800/40"><td class="py-1.5 text-blue-400 font-bold">${k}</td><td class="py-1.5 text-gray-200">${v}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+    } catch(e) {
+        document.getElementById('u-protocol').textContent = 'Invalid URL';
+        document.getElementById('u-host').textContent = '—';
+        document.getElementById('u-port').textContent = '—';
+        document.getElementById('u-path').textContent = '—';
+        document.getElementById('u-params-container').innerHTML = '';
+    }
+}
+
+// QR Code Pure Canvas Renderer
+function renderQrCode() {
+    const text = document.getElementById('qr-input').value.trim() || "https://dstat.topia";
+    const canvas = document.getElementById('qr-canvas');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const size = 200;
+    canvas.width = size; canvas.height = size;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+
+    // Render finder patterns & simulated matrix grid
+    ctx.fillStyle = "#000000";
+    const moduleSize = size / 21;
+
+    function drawFinder(x, y) {
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(x * moduleSize, y * moduleSize, 7 * moduleSize, 7 * moduleSize);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect((x + 1) * moduleSize, (y + 1) * moduleSize, 5 * moduleSize, 5 * moduleSize);
+        ctx.fillStyle = "#000000";
+        ctx.fillRect((x + 2) * moduleSize, (y + 2) * moduleSize, 3 * moduleSize, 3 * moduleSize);
+    }
+
+    drawFinder(0, 0);
+    drawFinder(14, 0);
+    drawFinder(0, 14);
+
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) hash = (hash << 5) - hash + text.charCodeAt(i);
+
+    for (let r = 0; r < 21; r++) {
+        for (let c = 0; c < 21; c++) {
+            if ((r < 7 && c < 7) || (r < 7 && c > 13) || (r > 13 && c < 7)) continue;
+            let val = (r * 21 + c + Math.abs(hash)) % 3 === 0 || (r * c) % 5 === 0;
+            if (val) {
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(c * moduleSize, r * moduleSize, moduleSize, moduleSize);
+            }
+        }
+    }
+
+    const downloadBtn = document.getElementById('qr-download-btn');
+    if(downloadBtn) downloadBtn.href = canvas.toDataURL("image/png");
+}
+
+// Identity Persona Generator Logic
+const firstNames = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan"];
+const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez"];
+const streets = ["Main St", "High St", "Park Ave", "Oak St", "Cedar St", "Maple Ave", "Washington Blvd", "Lake Rd"];
+const cities = ["New York, NY 10001", "Los Angeles, CA 90001", "Chicago, IL 60601", "Houston, TX 77001", "Phoenix, AZ 85001", "Seattle, WA 98101"];
+
+function generatePersona() {
+    const fn = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const ln = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const age = Math.floor(Math.random() * 45) + 20;
+    const year = new Date().getFullYear() - age;
+    const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+    const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+
+    document.getElementById('p-name').textContent = fn + " " + ln;
+    document.getElementById('p-gender').textContent = (Math.random() > 0.5 ? "Male" : "Female") + " (" + age + " yrs)";
+    document.getElementById('p-dob').textContent = `${year}-${month}-${day}`;
+    document.getElementById('p-address').textContent = (Math.floor(Math.random() * 900) + 100) + " " + streets[Math.floor(Math.random() * streets.length)];
+    document.getElementById('p-city').textContent = cities[Math.floor(Math.random() * cities.length)];
+    document.getElementById('p-email').textContent = `${fn.toLowerCase()}.${ln.toLowerCase()}${Math.floor(Math.random() * 90 + 10)}@example.com`;
+    document.getElementById('p-phone').textContent = `+1 (${Math.floor(Math.random()*800+100)}) 555-${String(Math.floor(Math.random()*9000+1000))}`;
+    document.getElementById('p-ssn').textContent = `${Math.floor(Math.random()*800+100)}-${Math.floor(Math.random()*90+10)}-${Math.floor(Math.random()*9000+1000)}`;
+
+    const ccPrefix = "4532";
+    let ccRandom = "";
+    for(let i = 0; i < 11; i++) ccRandom += Math.floor(Math.random() * 10);
+
+    let sum = 0;
+    let ccFull = ccPrefix + ccRandom;
+    for(let i = 0; i < 15; i++) {
+        let intVal = parseInt(ccFull.charAt(i));
+        if(i % 2 === 0) { intVal *= 2; if(intVal > 9) intVal -= 9; }
+        sum += intVal;
+    }
+    let checkDigit = (10 - (sum % 10)) % 10;
+    ccFull += checkDigit;
+
+    document.getElementById('p-card').textContent = ccFull.replace(/(.{4})/g, '$1 ').trim();
+    document.getElementById('p-card-extra').textContent = `EXP: 12/${new Date().getFullYear() + 3 - 2000} | CVV: ${Math.floor(Math.random()*899+100)}`;
+}
+
+// Color Picker & WCAG Contrast Logic
+function hexToRgb(hex) {
+    let clean = hex.replace('#', '');
+    if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+    const num = parseInt(clean, 16);
+    return isNaN(num) ? [0,0,0] : [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+}
+
+function getLuminance(r, g, b) {
+    const a = [r, g, b].map(v => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+}
+
+function calculateContrast() {
+    const fg = document.getElementById('clr-fg-hex').value;
+    const bg = document.getElementById('clr-bg-hex').value;
+
+    const rgb1 = hexToRgb(fg);
+    const rgb2 = hexToRgb(bg);
+
+    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
+    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
+
+    const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+
+    document.getElementById('clr-preview').style.color = fg;
+    document.getElementById('clr-preview').style.backgroundColor = bg;
+    document.getElementById('clr-ratio').textContent = ratio.toFixed(2) + " : 1";
+
+    const aa = document.getElementById('clr-wcag-aa');
+    const aaa = document.getElementById('clr-wcag-aaa');
+
+    if(ratio >= 4.5) { aa.textContent = "PASS (Normal & Large)"; aa.className = "result-value font-bold text-green-400"; }
+    else if(ratio >= 3.0) { aa.textContent = "PASS (Large Text Only)"; aa.className = "result-value font-bold text-yellow-400"; }
+    else { aa.textContent = "FAIL"; aa.className = "result-value font-bold text-red-400"; }
+
+    if(ratio >= 7.0) { aaa.textContent = "PASS"; aaa.className = "result-value font-bold text-green-400"; }
+    else { aaa.textContent = "FAIL"; aaa.className = "result-value font-bold text-red-400"; }
+}
+
+function syncColorInput(type) {
+    const val = document.getElementById(`clr-${type}-picker`).value;
+    document.getElementById(`clr-${type}-hex`).value = val;
+    calculateContrast();
+}
+
+function syncColorPicker(type) {
+    const val = document.getElementById(`clr-${type}-hex`).value;
+    if(/^#[0-9A-F]{6}$/i.test(val)) {
+        document.getElementById(`clr-${type}-picker`).value = val;
+        calculateContrast();
+    }
+}
+
+// Zero-Width Text Steganography Logic
+// Mapping 0 and 1 bits to Zero-Width Space (\u200B) and Zero-Width Non-Joiner (\u200C), separated by Zero-Width Joiner (\u200D)
+function textToZeroWidth(text) {
+    return text.split('').map(char => {
+        return char.charCodeAt(0).toString(2).padStart(8, '0').split('').map(bit => {
+            return bit === '1' ? '\u200B' : '\u200C';
+        }).join('') + '\u200D';
+    }).join('');
+}
+
+function zeroWidthToText(zeroStr) {
+    const charBlocks = zeroStr.split('\u200D').filter(b => b.length > 0);
+    return charBlocks.map(block => {
+        const bits = block.split('').map(ch => ch === '\u200B' ? '1' : (ch === '\u200C' ? '0' : '')).join('');
+        return bits.length === 8 ? String.fromCharCode(parseInt(bits, 2)) : '';
+    }).join('');
+}
+
+function encodeSteganography() {
+    const cover = document.getElementById('steg-cover').value || "Hello world";
+    const secret = document.getElementById('steg-secret').value;
+    if(!secret) return alert("Please enter secret hidden text.");
+
+    const hiddenEncoded = textToZeroWidth(secret);
+    const splitIndex = Math.floor(cover.length / 2);
+    const stegText = cover.slice(0, splitIndex) + hiddenEncoded + cover.slice(splitIndex);
+
+    document.getElementById('steg-output').value = stegText;
+}
+
+function decodeSteganography() {
+    const input = document.getElementById('steg-output').value || document.getElementById('steg-cover').value;
+    const zeroWidthPart = input.replace(/[^\u200B\u200C\u200D]/g, '');
+
+    if(!zeroWidthPart) {
+        alert("No hidden zero-width steganographic characters detected in input.");
+        return;
+    }
+
+    const decoded = zeroWidthToText(zeroWidthPart);
+    alert("Revealed Hidden Secret Message: " + decoded);
+}
+
+// IPv4 Subnet Calculator Logic
+function ipToInt(ip) {
+    return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+}
+
+function intToIp(int) {
+    return [(int >>> 24) & 255, (int >>> 16) & 255, (int >>> 8) & 255, int & 255].join('.');
+}
+
+function calculateSubnet() {
+    const input = document.getElementById('sub-input').value.trim();
+    const parts = input.split('/');
+    if(parts.length !== 2) return;
+
+    const ipStr = parts[0];
+    const cidr = parseInt(parts[1]);
+
+    if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ipStr) || isNaN(cidr) || cidr < 0 || cidr > 32) return;
+
+    const ipNum = ipToInt(ipStr);
+    const maskNum = cidr === 0 ? 0 : (~0 << (32 - cidr)) >>> 0;
+    const wildcardNum = (~maskNum) >>> 0;
+
+    const netNum = (ipNum & maskNum) >>> 0;
+    const bcastNum = (netNum | wildcardNum) >>> 0;
+
+    const firstHostNum = cidr >= 31 ? netNum : netNum + 1;
+    const lastHostNum = cidr >= 31 ? bcastNum : bcastNum - 1;
+
+    const usableHosts = cidr >= 31 ? (cidr === 31 ? 2 : 1) : (Math.pow(2, 32 - cidr) - 2);
+
+    document.getElementById('sub-net').textContent = intToIp(netNum) + " /" + cidr;
+    document.getElementById('sub-mask').textContent = intToIp(maskNum);
+    document.getElementById('sub-wildcard').textContent = intToIp(wildcardNum);
+    document.getElementById('sub-bcast').textContent = intToIp(bcastNum);
+    document.getElementById('sub-range').textContent = intToIp(firstHostNum) + " - " + intToIp(lastHostNum);
+    document.getElementById('sub-hosts').textContent = usableHosts.toLocaleString();
+}
+
+// Line-by-Line Text Diff Comparator Logic
+function compareDiff() {
+    const a = document.getElementById('diff-text-a').value.split('\n');
+    const b = document.getElementById('diff-text-b').value.split('\n');
+    const output = document.getElementById('diff-output');
+
+    let html = '';
+    const max = Math.max(a.length, b.length);
+
+    for (let i = 0; i < max; i++) {
+        const lineA = a[i];
+        const lineB = b[i];
+
+        if (lineA === lineB) {
+            html += `<div class="p-1 rounded bg-gray-800/20 text-gray-400"><span class="w-8 inline-block text-gray-600 select-none">${i+1}</span> ${lineA || ''}</div>`;
+        } else if (lineA !== undefined && lineB === undefined) {
+            html += `<div class="p-1 rounded bg-red-900/30 text-red-400 border-l-2 border-red-500"><span class="w-8 inline-block text-red-600 select-none">${i+1}</span> - ${lineA}</div>`;
+        } else if (lineA === undefined && lineB !== undefined) {
+            html += `<div class="p-1 rounded bg-green-900/30 text-green-400 border-l-2 border-green-500"><span class="w-8 inline-block text-green-600 select-none">${i+1}</span> + ${lineB}</div>`;
+        } else {
+            html += `<div class="p-1 rounded bg-red-900/20 text-red-300 line-through"><span class="w-8 inline-block text-red-500 select-none">${i+1}</span> - ${lineA}</div>`;
+            html += `<div class="p-1 rounded bg-green-900/30 text-green-300 font-bold"><span class="w-8 inline-block text-green-500 select-none">${i+1}</span> + ${lineB}</div>`;
+        }
+    }
+
+    output.innerHTML = html || '<div class="text-gray-500">Enter text above to see diff comparisons.</div>';
+}
+
+// Bitwise & Unit Radix Calculator Logic
+function parseRadixNum(str) {
+    let s = str.trim().toLowerCase();
+    if(s.startsWith('0x')) return parseInt(s.substring(2), 16);
+    if(s.startsWith('0b')) return parseInt(s.substring(2), 2);
+    return parseInt(s, 10);
+}
+
+function runBitwiseCalc() {
+    const valA = parseRadixNum(document.getElementById('bit-val-a').value);
+    const valB = parseRadixNum(document.getElementById('bit-val-b').value);
+    const op = document.getElementById('bit-op').value;
+
+    if(isNaN(valA)) return;
+
+    let res = 0;
+    if(op === 'AND') res = valA & (isNaN(valB) ? 0 : valB);
+    else if(op === 'OR') res = valA | (isNaN(valB) ? 0 : valB);
+    else if(op === 'XOR') res = valA ^ (isNaN(valB) ? 0 : valB);
+    else if(op === 'NOT') res = ~valA;
+    else if(op === 'SHL') res = valA << (isNaN(valB) ? 0 : valB);
+    else if(op === 'SHR') res = valA >> (isNaN(valB) ? 0 : valB);
+
+    res = res >>> 0; // unsigned 32-bit integer conversion
+
+    document.getElementById('bit-res-dec').textContent = res.toString(10);
+    document.getElementById('bit-res-hex').textContent = "0x" + res.toString(16).toUpperCase();
+    document.getElementById('bit-res-bin').textContent = "0b" + res.toString(2);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadSavedTheme();
+    if(window.lucide) lucide.createIcons();
+    applyWebhookPreset();
+    loadFingerprint();
+    filterDevRef();
+    generatePassword();
+    startTotpTimer();
+    setInterval(updateLiveClock, 1000);
+    updateLiveClock();
+    parseUrl();
+    renderQrCode();
+    generatePersona();
+    calculateContrast();
+    calculateSubnet();
+    compareDiff();
+    runBitwiseCalc();
+});
+</script>
+<script disable-devtool-auto src="https://cdn.jsdelivr.net/npm/disable-devtool/disable-devtool.min.js"></script>
+<script>if(typeof DisableDevtool!=='undefined'){DisableDevtool({ondevtoolopen:()=>{window.close();}});}</script>
+<script>
+// Persistent Snow Script
+let snowInterval = null;
+let snowEnabled = false;
+function createSnowflake() {
+    const flake = document.createElement('div');
+    flake.className = 'snowflake';
+    flake.innerHTML = ['❄', '❅', '❆', '•'][Math.floor(Math.random() * 4)];
+    flake.style.left = Math.random() * 100 + 'vw';
+    flake.style.fontSize = (Math.random() * 10 + 8) + 'px';
+    flake.style.opacity = Math.random() * 0.6 + 0.2;
+    const duration = Math.random() * 6 + 5;
+    flake.style.animationDuration = duration + 's';
+    document.body.appendChild(flake);
+    setTimeout(() => flake.remove(), (duration + 3) * 1000);
+}
+function startSnow() {
+    if (snowInterval) return;
+    snowEnabled = true;
+    setCookie('dstat_snow', '1', 30);
+    const btn = document.getElementById('snowBtn');
+    if (btn) btn.style.color = '#93c5fd';
+    for (let i = 0; i < 12; i++) setTimeout(createSnowflake, i * 150);
+    snowInterval = setInterval(createSnowflake, 300);
+}
+function stopSnow() {
+    snowEnabled = false;
+    setCookie('dstat_snow', '0', 30);
+    clearInterval(snowInterval);
+    snowInterval = null;
+    const btn = document.getElementById('snowBtn');
+    if (btn) btn.style.color = '';
+    document.querySelectorAll('.snowflake').forEach(f => f.remove());
+}
+function toggleSnow() { if (snowEnabled) stopSnow(); else startSnow(); }
+document.addEventListener('DOMContentLoaded', function () { if (getCookie('dstat_snow') === '1') startSnow(); });
+</script>
+</body>
+</html>

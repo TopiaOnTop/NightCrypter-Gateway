@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Mirrored from dstat.topia/reviews by HTTrack Website Copier/3.x [XR&CO'2014], Fri, 14 Aug 2026 09:13:14 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
+<head>
+        <meta charset="UTF-8">
+        <title>dstat.topia - Booter Reviews</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+        <link rel="icon" type="image/x-icon" href="public/assets/img/dstat.html">
+        <link rel="preconnect" href="https://fonts.googleapis.com/">
+        <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Bungee:wght@400&amp;display=swap" rel="stylesheet">
+        <script src="https://cdn.tailwindcss.com/"></script>
+        <script src="https://unpkg.com/lucide%401.31.0/dist/umd/lucide.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+        <script src="sidebar.js"></script>
+        <script src="ui.js"></script>
+        <script src="banners.js"></script>
+        <style>
+            :root {
+                --bg-primary: #0A0B1A;
+                --bg-secondary: #0D0E23;
+                --bg-badge: #1a1a2e;
+                --border-color: #374151;
+                --text-primary: #ffffff;
+                --text-secondary: #d1d5db;
+                --accent-color: #3b82f6;
+                --accent-secondary: #ef4444;
+                --success-color: #10b981;
+                --warning-color: #f59e0b;
+                --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                --shadow-color: rgba(59, 130, 246, 0.1);
+            }
+            body.theme-blue {
+                --bg-primary: #0A0B1A;
+                --bg-secondary: #0D0E23;
+                --border-color: #374151;
+                --accent-color: #3b82f6;
+                --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                --shadow-color: rgba(59, 130, 246, 0.1);
+            }
+            body.theme-gray {
+                --bg-primary: #0A0B12;
+                --bg-secondary: #0D0E1A;
+                --border-color: #2A2E3F;
+                --accent-color: #6B7280;
+                --gradient-primary: linear-gradient(135deg, #4B5563, #6B7280);
+                --shadow-color: rgba(0, 0, 0, 0.3);
+            }
+            body.theme-red, body.theme-purple {
+                --bg-primary: #0F0A1A;
+                --bg-secondary: #150D23;
+                --border-color: #3D2E5C;
+                --accent-color: #8b5cf6;
+                --gradient-primary: linear-gradient(135deg, #7c3aed, #5b21b6);
+                --shadow-color: rgba(139, 92, 246, 0.15);
+            }
+
+            body {
+                font-family: "Inter", sans-serif;
+                background: var(--bg-primary);
+                color: var(--text-primary);
+                user-select: none;
+            }
+            ::-webkit-scrollbar { display: none; }
+            * { -ms-overflow-style: none; scrollbar-width: none; }
+
+            .sidebar-item { transition: color .2s ease-in-out; }
+
+            [class~=category-content] {
+                max-height: 0;
+                overflow: hidden;
+                opacity: 0;
+                transition: max-height .3s ease-out, opacity .3s ease-out;
+            }
+            .category-content.show { max-height: 62.5pc; opacity: 1; }
+            [class~=rotate-icon][class~=open] { transform: rotate(90deg); }
+
+            /* Themes */
+            .themes-container { margin-top: 20px; }
+            .themes-header {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 10px 12px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .themes-header span { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+            .themes-header svg { transition: transform 0.3s ease; color: var(--text-secondary); width: 16px; height: 16px; }
+            .themes-header.open svg { transform: rotate(180deg); }
+            .themes-dropdown { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 4px; border-radius: 8px; }
+            .themes-dropdown.show { max-height: 200px; }
+            .theme-option {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 8px 12px;
+                margin-top: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 13px;
+                font-weight: 500;
+                color: var(--text-secondary);
+            }
+            .theme-option .color-dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
+            .dot-blue { background: #3b82f6; }
+            .dot-gray { background: #6B7280; }
+            .dot-red { background: #8b5cf6; }
+
+            /* Review card */
+            .review-card {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                overflow: hidden;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            }
+            .review-card:hover {
+                border-color: var(--accent-color);
+                box-shadow: 0 4px 20px var(--shadow-color);
+            }
+            .review-top {
+                padding: 20px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .review-field-label {
+                font-size: 0.7rem;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--text-secondary);
+                margin-bottom: 4px;
+            }
+            .review-field-value {
+                font-size: 0.9rem;
+                font-weight: 500;
+                color: var(--text-primary);
+            }
+            .review-field-value.url a {
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: color 0.2s ease;
+            }
+            .review-field-value.url a:hover {
+                color: var(--accent-color);
+            }
+            .review-bottom {
+                padding: 16px 20px;
+                display: flex;
+                align-items: center;
+                gap: 32px;
+                flex-wrap: wrap;
+            }
+            .review-stat {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+            .review-stat-label {
+                font-size: 0.7rem;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--text-secondary);
+            }
+            .stars {
+                display: flex;
+                gap: 1px;
+                font-size: 1rem;
+            }
+            .star-full { color: #f59e0b; }
+            .star-empty { color: #374151; }
+
+            /* Badges */
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+            }
+            .badge-leader {
+                background: rgba(245, 158, 11, 0.15);
+                border: 1px solid rgba(245, 158, 11, 0.4);
+                color: #f59e0b;
+            }
+            .badge-verified {
+                background: rgba(16, 185, 129, 0.12);
+                border: 1px solid rgba(16, 185, 129, 0.35);
+                color: #10b981;
+            }
+            .badge-api {
+                background: rgba(59, 130, 246, 0.12);
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                color: #3b82f6;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Loader */
+            #loader {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: var(--bg-primary);
+                display: flex; justify-content: center; align-items: center;
+                z-index: 1000; opacity: 1; transition: opacity .5s ease-out;
+            }
+            #loader.hidden { opacity: 0; pointer-events: none; }
+            .spinner {
+                width: 3.125pc; height: 3.125pc;
+                border: 5px solid rgba(255,255,255,.2);
+                border-top-color: #fff;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin { to { transform: rotate(360deg); } }
+
+            /* Telegram popup */
+            .telegram-popup {
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                width: 280px;
+                background: #111318;
+                border: 1px solid #2a2d36;
+                border-radius: 14px;
+                padding: 18px;
+                z-index: 999;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                transition: opacity 0.3s ease, transform 0.3s ease;
+            }
+            .telegram-popup.hide { opacity: 0; pointer-events: none; transform: translateY(10px); }
+            .close-telegram-btn {
+                position: absolute; top: 10px; right: 10px;
+                background: none; border: none; cursor: pointer; opacity: 0.6;
+            }
+            .close-telegram-btn:hover { opacity: 1; }
+            .telegram-popup-body p { font-size: 0.82rem; color: #9ca3af; margin-bottom: 12px; line-height: 1.5; }
+            .telegram-join-btn {
+                display: block; width: 100%; padding: 10px;
+                background: #2563eb; color: white;
+                border-radius: 8px; text-align: center;
+                font-size: 0.85rem; font-weight: 600;
+                text-decoration: none; transition: background 0.2s ease;
+            }
+            .telegram-join-btn:hover { background: #1d4ed8; }
+
+            /* Sidebar nav pill styles */
+            .sidebar-item {
+                transition: all 0.2s ease;
+                border-radius: 8px;
+            }
+            .sidebar-item:hover {
+                background: rgba(255,255,255,0.06);
+                color: white !important;
+            }
+            .sidebar-item.active-nav {
+                background: rgba(255,255,255,0.08);
+                color: white !important;
+                border-left: 2px solid var(--accent-color);
+                font-weight: 600;
+            }
+            .sub-server-button {
+                border-radius: 8px;
+                transition: all 0.2s ease;
+            }
+            .sub-server-button:hover {
+                background: rgba(255,255,255,0.06);
+                color: white;
+            }
+
+            .sidebar-item-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 8px 12px;
+                border-radius: 10px;
+                color: var(--text-secondary, #9ca3af);
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+            }
+            .sidebar-item-link:hover { color: white; background: none !important; }
+
+        /* Snow effect */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: rgba(255,255,255,0.7);
+            font-size: 1em;
+            pointer-events: none;
+            z-index: 9999;
+            animation: snowfall linear infinite;
+        }
+        @keyframes snowfall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0.3; }
+        }
+        </style>
+    </head>
+    <body class="theme-blue">
+
+        <div id="loader"><div class="spinner"></div></div>
+
+        <div class="flex min-h-screen">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="fixed top-3 bottom-10 left-4 w-64 bg-[--bg-secondary] px-3 py-4 shadow-lg z-50 overflow-y-auto border border-gray-800/50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out rounded-2xl">
+                <button id="closeSidebar" class="md:hidden absolute top-4 right-4 text-[--text-secondary] hover:text-[--text-primary]">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+                                                                                                                <div class="mb-6 flex items-center gap-3 px-3 pt-2">
+                    <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px;flex-shrink:0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                    </div>
+                    <span class="text-base font-bold tracking-tight text-[--text-primary]">dstat.topia</span>
+                </div>
+                <nav class="flex-1 space-y-6">
+                    <div>
+                        <p class="px-3 text-xs font-semibold text-[--text-secondary] uppercase mb-2">MAIN</p>
+                        <div class="space-y-1">
+                        <a href="index.html" class="sidebar-item-link">
+                            <i data-lucide="home" class="h-4 w-4"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="tools.html" class="sidebar-item-link">
+                            <i data-lucide="wrench" class="h-4 w-4"></i>
+                            <span>Tools</span>
+                        </a>
+                        <a href="reviews.html" class="sidebar-item-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4">
+                                <path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Booter Review</span>
+                        </a>
+                    </div>
+
+                    <!-- THEMES -->
+                    <div class="themes-container" style="margin-bottom:8px;margin-top:16px;">
+                        <div class="themes-header" id="themesHeader">
+                            <span>Themes</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="themes-dropdown" id="themesDropdown">
+                            <div class="theme-option" onclick="setTheme('blue')"><span class="color-dot dot-blue"></span><span>Blue Theme</span></div>
+                            <div class="theme-option" onclick="setTheme('gray')"><span class="color-dot dot-gray"></span><span>Gray/Black Theme</span></div>
+                            <div class="theme-option" onclick="setTheme('red')"><span class="color-dot dot-red"></span><span>Purple Theme</span></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:24px;">
+                        <p class="px-3 text-xs font-semibold text-[--text-secondary] uppercase mb-2">LIVE DSTAT</p>
+                        <div class="space-y-1" id="servers-nav"></div>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main -->
+            <main class="flex-1 p-5 md:p-6 overflow-y-auto md:ml-72 flex flex-col min-h-screen">
+                <button id="openSidebar" class="md:hidden fixed top-4 left-4 z-50 text-[--text-secondary] hover:text-[--text-primary]">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+
+                <div class="flex-1 space-y-6">
+                    <!-- Header -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <h1 class="text-lg font-semibold text-[--text-primary]">Booter Reviews</h1>
+                    </div>
+
+                    <!-- Reviews grid -->
+                    <div id="reviewsGrid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-between items-center p-4 mt-6 text-sm text-gray-600 border-t border-gray-800/50">
+                    <div class="text-left">Copyright &copy;2024-2025 dstat.topia All rights Reserved | Version 1.4</div>
+                    <div class="text-right flex items-center">
+                        Hand-crafted & Made with
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1 text-gray-600">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"/>
+                        </svg>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Telegram Popup -->
+        <div id="telegramPopup" class="telegram-popup hide">
+            <button class="close-telegram-btn" id="closeTelegramPopup">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <div style="width:36px;height:36px;background:#1d4ed8;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 14.4l-2.95-.924c-.64-.203-.654-.64.136-.954l11.52-4.44c.534-.194 1.001.13.596.166z"/></svg>
+                </div>
+                <div>
+                    <div style="font-size:0.88rem;font-weight:700;color:#fff;">Telegram Updates</div>
+                    <div style="font-size:0.75rem;color:#9ca3af;">Follow us!</div>
+                </div>
+            </div>
+            <div class="telegram-popup-body">
+                <p>Get live dstats, breaking news, and exclusive content delivered to your Telegram.</p>
+                <a href="https://t.me/dstatwiki" target="_blank" class="telegram-join-btn">Join Channel ?</a>
+            </div>
+        </div>
+
+
+    <script>
+        function renderStarsSVG(count) {
+            let html = '';
+            const starSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#f59e0b" style="width:18px;height:18px;display:inline-block;"><path fill-rule="evenodd" d="M13.5 4.938a7 7 0 1 1-9.006 1.737c.202-.257.59-.218.793.039.278.352.594.672.943.954.332.269.786-.049.773-.476a5.977 5.977 0 0 1 .572-2.759 6.026 6.026 0 0 1 2.486-2.665c.247-.14.55-.016.677.238A6.967 6.967 0 0 0 13.5 4.938ZM14 12a4 4 0 0 1-4 4c-1.913 0-3.52-1.398-3.91-3.182-.093-.429.44-.643.814-.413a4.043 4.043 0 0 0 1.601.564c.303.038.531-.24.51-.544a5.975 5.975 0 0 1 1.315-4.192.447.447 0 0 1 .431-.16A4.001 4.001 0 0 1 14 12Z" clip-rule="evenodd" /></svg>`;
+            const emptyStarSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#374151" style="width:18px;height:18px;display:inline-block;"><path fill-rule="evenodd" d="M13.5 4.938a7 7 0 1 1-9.006 1.737c.202-.257.59-.218.793.039.278.352.594.672.943.954.332.269.786-.049.773-.476a5.977 5.977 0 0 1 .572-2.759 6.026 6.026 0 0 1 2.486-2.665c.247-.14.55-.016.677.238A6.967 6.967 0 0 0 13.5 4.938ZM14 12a4 4 0 0 1-4 4c-1.913 0-3.52-1.398-3.91-3.182-.093-.429.44-.643.814-.413a4.043 4.043 0 0 0 1.601.564c.303.038.531-.24.51-.544a5.975 5.975 0 0 1 1.315-4.192.447.447 0 0 1 .431-.16A4.001 4.001 0 0 1 14 12Z" clip-rule="evenodd" /></svg>`;
+            for (let i = 0; i < 5; i++) {
+                html += (i < count) ? starSvg : emptyStarSvg;
+            }
+            return html;
+        }
+
+        function renderBadge(status) {
+            const s = (status || '').toLowerCase();
+            if (s === 'leader') {
+                return `<span class="badge badge-leader">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M11.219 2.016a1 1 0 0 1 1.562 0l2.298 2.759 3.531-1.147a1 1 0 0 1 1.271.878l.217 3.706 3.468 1.52a1 1 0 0 1 .343 1.544L21.5 13.5l.909 3.61a1 1 0 0 1-1.107 1.231l-3.677-.551-2.02 3.044a1 1 0 0 1-1.61.051L12 17.972l-1.995 2.913a1 1 0 0 1-1.61-.05l-2.02-3.045-3.677.551a1 1 0 0 1-1.107-1.23L2.5 13.5l-1.409-2.224a1 1 0 0 1 .343-1.544l3.468-1.52.217-3.706a1 1 0 0 1 1.271-.878l3.531 1.147z"/></svg>
+                    Leader
+                </span>`;
+            } else if (s === 'scam') {
+                return `<span class="badge" style="background:rgba(239, 68, 68, 0.15);border:1px solid rgba(239, 68, 68, 0.4);color:#ef4444;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Scam
+                </span>`;
+            } else {
+                return `<span class="badge badge-verified">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Verified
+                </span>`;
+            }
+        }
+
+        async function loadDynamicReviews() {
+            const grid = document.getElementById('reviewsGrid');
+            if (!grid) return;
+            try {
+                const reviews = await fetch('/api/reviews').then(r => r.json());
+                grid.innerHTML = '';
+                reviews.forEach(rev => {
+                    const cleanUrl = rev.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+                    const card = document.createElement('div');
+                    card.className = 'review-card';
+                    card.innerHTML = `
+                        <div class="review-top">
+                            <div>
+                                <div class="review-field-label">Name</div>
+                                <div class="review-field-value">${rev.name}</div>
+                            </div>
+                            <div>
+                                <div class="review-field-label">Description</div>
+                                <div class="review-field-value text-sm text-[--text-secondary]">${rev.description}</div>
+                            </div>
+                            <div>
+                                <div class="review-field-label">URL</div>
+                                <div class="review-field-value url">
+                                    <a href="${rev.url}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="review-bottom">
+                            <div class="review-stat">
+                                <div class="review-stat-label">Layer 4</div>
+                                <div class="stars">${renderStarsSVG(rev.layer4)}</div>
+                            </div>
+                            <div class="review-stat">
+                                <div class="review-stat-label">Layer 7</div>
+                                <div class="stars">${renderStarsSVG(rev.layer7)}</div>
+                            </div>
+                            <div class="review-stat">
+                                <div class="review-stat-label">Status</div>
+                                <div class="flex gap-2">${renderBadge(rev.status)}</div>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (_) {}
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            if(typeof loadSavedTheme === 'function') loadSavedTheme();
+            try {
+                const servers = await fetch('/api/servers').then(r => r.json());
+                renderServers(servers, 'layer4');
+                lucide.createIcons();
+                document.querySelectorAll('.layer-button').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var c = btn.nextElementSibling;
+                        var i = btn.querySelector('.rotate-icon');
+                        var o = c.style.maxHeight && c.style.maxHeight !== '0px';
+                        c.style.maxHeight = o ? '0px' : '600px';
+                        c.style.opacity = o ? '0' : '1';
+                        if(i) i.classList.toggle('open');
+                    });
+                });
+                document.querySelectorAll('.category-button').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var c = btn.nextElementSibling;
+                        var i = btn.querySelector('.rotate-icon');
+                        var o = c.style.maxHeight && c.style.maxHeight !== '0px';
+                        c.style.maxHeight = o ? '0px' : '600px';
+                        c.style.opacity = o ? '0' : '1';
+                        if(i) i.classList.toggle('open');
+                    });
+                });
+            } catch(_) {}
+            await loadDynamicReviews();
+            const loader = document.getElementById('loader');
+            if(loader) loader.classList.add('hidden');
+        });
+
+        function setCookie(n,v,d){let e='';if(d){const dt=new Date();dt.setTime(dt.getTime()+(d*864e5));e='; expires='+dt.toUTCString();}document.cookie=n+'='+(v||'')+e+'; path=/';}
+        function getCookie(n){const eq=n+'=',ca=document.cookie.split(';');for(let c of ca){c=c.trim();if(c.indexOf(eq)===0)return c.substring(eq.length);}return null;}
+        function setTheme(t){document.body.classList.remove('theme-blue','theme-gray','theme-red');document.body.classList.add('theme-'+t);setCookie('dstat_theme',t,30);}
+        function loadSavedTheme(){const t=getCookie('dstat_theme');setTheme(['blue','gray','red'].includes(t)?t:'blue');}
+
+        // Themes dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            const themesHeader = document.getElementById('themesHeader');
+            const themesDropdown = document.getElementById('themesDropdown');
+            if(themesHeader && themesDropdown) {
+                themesHeader.addEventListener('click', function() {
+                    themesDropdown.classList.toggle('show');
+                    themesHeader.classList.toggle('open');
+                });
+            }
+        });
+</script>
+        <script disable-devtool-auto src="https://cdn.jsdelivr.net/npm/disable-devtool/disable-devtool.min.js"></script>
+        <script>
+            if(typeof DisableDevtool !== 'undefined') {
+                DisableDevtool({
+                    ondevtoolopen: ()=>{
+                        window.close();
+                    }
+                });
+            }
+        </script>
+    <script>
+// ========== PERSISTENT SNOW (shared across pages via cookie) ==========
+let snowInterval = null;
+let snowEnabled = false;
+
+function createSnowflake() {
+    const flake = document.createElement('div');
+    flake.className = 'snowflake';
+    flake.innerHTML = ['❄', '❅', '❆', '•'][Math.floor(Math.random() * 4)];
+    flake.style.left = Math.random() * 100 + 'vw';
+    flake.style.fontSize = (Math.random() * 10 + 8) + 'px';
+    flake.style.opacity = Math.random() * 0.6 + 0.2;
+    const duration = Math.random() * 6 + 5;
+    flake.style.animationDuration = duration + 's';
+    document.body.appendChild(flake);
+    setTimeout(() => flake.remove(), (duration + 3) * 1000);
+}
+
+function startSnow() {
+    if (snowInterval) return;
+    snowEnabled = true;
+    setCookie('dstat_snow', '1', 30);
+    const btn = document.getElementById('snowBtn');
+    if (btn) btn.style.color = '#93c5fd';
+    for (let i = 0; i < 12; i++) setTimeout(createSnowflake, i * 150);
+    snowInterval = setInterval(createSnowflake, 300);
+}
+
+function stopSnow() {
+    snowEnabled = false;
+    setCookie('dstat_snow', '0', 30);
+    clearInterval(snowInterval);
+    snowInterval = null;
+    const btn = document.getElementById('snowBtn');
+    if (btn) btn.style.color = '';
+    document.querySelectorAll('.snowflake').forEach(f => f.remove());
+}
+
+function toggleSnow() {
+    if (snowEnabled) stopSnow();
+    else startSnow();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (getCookie('dstat_snow') === '1') {
+        startSnow();
+    }
+});
+</script>
+</body>
+
+<!-- Mirrored from dstat.topia/reviews by HTTrack Website Copier/3.x [XR&CO'2014], Fri, 14 Aug 2026 09:13:14 GMT -->
+</html>
