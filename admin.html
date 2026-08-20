@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>dstat.topia - Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <link rel="icon" type="image/x-icon" href="public/assets/img/dstat.html">
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://unpkg.com/lucide@1.31.0/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0A0B1A;
+            --bg-secondary: #0D0E23;
+            --border-color: #374151;
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .admin-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .btn-danger:hover { opacity: 0.9; }
+        .input-field {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: white;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: var(--accent-color); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Auth Overlay / Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div class="admin-card max-w-md w-full space-y-6">
+            <div class="flex items-center gap-3">
+                <i data-lucide="shield-lock" class="w-8 h-8 text-blue-500"></i>
+                <h2 class="text-xl font-bold">Admin Panel Authentication</h2>
+            </div>
+            <p class="text-sm text-gray-400">Please enter the complex admin password to access the panel.</p>
+            <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Password</label>
+                    <input type="password" id="adminPassword" class="input-field" placeholder="Enter password..." required />
+                </div>
+                <div id="authError" class="text-red-400 text-sm hidden">Invalid password. Please try again.</div>
+                <button type="submit" class="btn-primary w-full flex justify-center items-center gap-2">
+                    <i data-lucide="key" class="w-4 h-4"></i> Unlock Panel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Token Analytics Modal -->
+    <div id="tokenModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 hidden">
+        <div class="admin-card max-w-2xl w-full space-y-6">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-6 h-6 text-emerald-400"></i>
+                    <h3 class="text-lg font-bold" id="modalTokenTitle">Token Usage Analytics</h3>
+                </div>
+                <button onclick="closeTokenModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span>Total Calls: <strong id="modalTokenCount" class="text-white text-sm">0</strong></span>
+                    <span id="modalTokenKey" class="font-mono text-emerald-400"></span>
+                </div>
+                <div class="h-64 w-full">
+                    <canvas id="tokenUsageChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="panelContent" class="max-w-6xl mx-auto space-y-8 hidden">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b border-gray-800 pb-5">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400">
+                    <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">dstat.topia Admin Panel</h1>
+                    <p class="text-xs text-gray-400">Manage Layer 4 Boomer parameters and dynamic Reviews</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors flex items-center gap-2">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+            </button>
+        </div>
+
+        <!-- Notification Banner -->
+        <div id="toast" class="hidden p-4 rounded-lg text-sm font-semibold text-white"></div>
+
+        <!-- Section 1: Server Boom Controls (Layer 4 & Layer 7) -->
+        <div class="admin-card space-y-6">
+            <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="zap" class="w-5 h-5 text-amber-500"></i>
+                    <h2 class="text-lg font-bold">Server Boomer Control (Layer 4 & Layer 7)</h2>
+                </div>
+                <span class="text-xs px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full font-semibold">
+                    Real-time Traffic Injector
+                </span>
+            </div>
+
+            <form id="boomForm" onsubmit="handleBoom(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Target Layer</label>
+                    <select id="boomLayer" class="input-field" onchange="onLayerSelectChange()" required>
+                        <option value="layer4">Layer 4 (BPS / PPS)</option>
+                        <option value="layer7">Layer 7 (RPS)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Server Target</label>
+                    <select id="boomServer" class="input-field" required>
+                        <option value="">-- Select Server --</option>
+                    </select>
+                </div>
+                <div id="fieldL4Bps">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Target Bandwidth (Gbps / Tbps)</label>
+                    <input type="text" id="boomBps" class="input-field" placeholder="e.g. 1500 or 1.5 Tbps" value="1500" />
+                </div>
+                <div id="fieldL4Pps">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Target PPS (MPPS / kPPS)</label>
+                    <input type="text" id="boomPps" class="input-field" placeholder="e.g. 2500 or 2.5 MPPS" value="2500" />
+                </div>
+                <div id="fieldL7Rps" class="hidden">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Target Requests (RPS / K / M)</label>
+                    <input type="text" id="boomRps" class="input-field" placeholder="e.g. 500k or 2.5M" value="500000" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Boom Format Mode</label>
+                    <select id="boomFormat" class="input-field" required>
+                        <option value="2">Format 2: Continuous Peak (Approximate)</option>
+                        <option value="1">Format 1: Drop (Peak then 20s Zero)</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2 lg:col-span-4 flex items-center gap-4 pt-2">
+                    <button type="submit" class="btn-primary flex items-center gap-2">
+                        <i data-lucide="flame" class="w-4 h-4"></i> Trigger Boom
+                    </button>
+                    <button type="button" onclick="handleReset()" class="btn-danger flex items-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Stop / Reset Server Boom
+                    </button>
+                </div>
+            </form>
+
+            <!-- Active Booms List -->
+            <div class="pt-4 border-t border-gray-800">
+                <h3 class="text-sm font-semibold text-gray-400 uppercase mb-3">All Registered Target Servers</h3>
+                <div id="serversListGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Banner Management & Ads Analytics -->
+        <div class="admin-card space-y-6">
+            <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="image" class="w-5 h-5 text-blue-400"></i>
+                    <h2 class="text-lg font-bold">Banners Management & Ads Analytics</h2>
+                </div>
+                <span class="text-xs px-2.5 py-1 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-full font-semibold">
+                    Interactive Reports
+                </span>
+            </div>
+
+            <!-- Add Banner Form -->
+            <form id="addBannerForm" onsubmit="handleAddBanner(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Banner Image / GIF Path or URL</label>
+                    <input type="text" id="banImg" class="input-field" placeholder="e.g. /assets/ethone-gif.gif or https://..." required />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Redirect Target URL</label>
+                    <input type="text" id="banUrl" class="input-field" placeholder="e.g. https://ethone.net/" required />
+                </div>
+                <div class="md:col-span-2 pt-2">
+                    <button type="submit" class="btn-primary flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Banner
+                    </button>
+                </div>
+            </form>
+
+            <!-- Banners Table -->
+            <div class="pt-4 border-t border-gray-800">
+                <h3 class="text-sm font-semibold text-gray-400 uppercase mb-3">Active Banners & Click Tracking</h3>
+                <div id="bannersContainer" class="space-y-3">
+                    <!-- Dynamic banner list -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: API Tokens & Usage Analytics -->
+        <div class="admin-card space-y-6">
+            <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="key" class="w-5 h-5 text-emerald-400"></i>
+                    <h2 class="text-lg font-bold">API Tokens & Usage Analytics</h2>
+                </div>
+                <span class="text-xs px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full font-semibold">
+                    Secure API Access
+                </span>
+            </div>
+
+            <!-- Create Token Form -->
+            <form id="createTokenForm" onsubmit="handleCreateToken(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Token Name / Client Label</label>
+                    <input type="text" id="tokName" class="input-field" placeholder="e.g. Telegram Bot Integration" required />
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="btn-primary w-full flex items-center justify-center gap-2">
+                        <i data-lucide="key-round" class="w-4 h-4"></i> Generate API Token
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tokens List Table -->
+            <div class="pt-4 border-t border-gray-800">
+                <h3 class="text-sm font-semibold text-gray-400 uppercase mb-3">Active API Tokens</h3>
+                <div id="tokensContainer" class="space-y-3">
+                    <!-- Dynamic token list -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Review Management -->
+        <div class="admin-card space-y-6">
+            <div class="flex items-center gap-2 border-b border-gray-800 pb-4">
+                <i data-lucide="star" class="w-5 h-5 text-yellow-500"></i>
+                <h2 class="text-lg font-bold">Review Management</h2>
+            </div>
+
+            <!-- Add Review Form -->
+            <form id="addReviewForm" onsubmit="handleAddReview(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Booter Name</label>
+                    <input type="text" id="revName" class="input-field" placeholder="e.g. Ethone Botnet" required />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">URL</label>
+                    <input type="text" id="revUrl" class="input-field" placeholder="https://example.com" required />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Status Badge</label>
+                    <select id="revStatus" class="input-field" required>
+                        <option value="leader">Leader</option>
+                        <option value="verified" selected>Verified</option>
+                        <option value="scam">Scam</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Layer 4 Rating (1-5 Stars)</label>
+                    <input type="number" id="revL4" min="1" max="5" value="5" class="input-field" required />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Layer 7 Rating (1-5 Stars)</label>
+                    <input type="number" id="revL7" min="1" max="5" value="5" class="input-field" required />
+                </div>
+                <div class="md:col-span-2 lg:col-span-3">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Description</label>
+                    <input type="text" id="revDesc" class="input-field" placeholder="Best stresser..." required />
+                </div>
+
+                <div class="md:col-span-2 lg:col-span-3 pt-2">
+                    <button type="submit" class="btn-primary flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Review
+                    </button>
+                </div>
+            </form>
+
+            <!-- Reviews Table / List -->
+            <div class="pt-4 border-t border-gray-800">
+                <h3 class="text-sm font-semibold text-gray-400 uppercase mb-3">Existing Reviews</h3>
+                <div id="reviewsContainer" class="space-y-3">
+                    <!-- Dynamic review list -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentPassword = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            const savedPwd = sessionStorage.getItem('admin_pwd');
+            if (savedPwd) {
+                verifyPassword(savedPwd);
+            }
+        });
+
+        async function verifyPassword(pwd) {
+            try {
+                const res = await fetch('/api/admin/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+                if (res.ok) {
+                    currentPassword = pwd;
+                    sessionStorage.setItem('admin_pwd', pwd);
+                    document.getElementById('authModal').classList.add('hidden');
+                    document.getElementById('panelContent').classList.remove('hidden');
+                    loadDashboardData();
+                } else {
+                    showAuthError();
+                }
+            } catch (err) {
+                showAuthError();
+            }
+        }
+
+        function handleAuth(e) {
+            e.preventDefault();
+            const pwd = document.getElementById('adminPassword').value;
+            verifyPassword(pwd);
+        }
+
+        function showAuthError() {
+            const err = document.getElementById('authError');
+            err.classList.remove('hidden');
+            sessionStorage.removeItem('admin_pwd');
+        }
+
+        function logout() {
+            sessionStorage.removeItem('admin_pwd');
+            location.reload();
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `p-4 rounded-lg text-sm font-semibold text-white ${type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3500);
+        }
+
+        async function loadDashboardData() {
+            try {
+                const servers = await fetch('/api/servers').then(r => r.json());
+                populateServerDropdown(servers);
+                loadBanners();
+                loadTokens();
+                loadReviews();
+            } catch (e) {
+                showToast('Failed to load servers', 'error');
+            }
+        }
+
+        async function loadTokens() {
+            const container = document.getElementById('tokensContainer');
+            try {
+                const res = await fetch('/api/tokens', {
+                    headers: { 'X-Admin-Password': currentPassword }
+                });
+                const tokens = await res.json();
+                container.innerHTML = '';
+                if (!Array.isArray(tokens) || tokens.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-gray-500">No active API tokens found.</p>';
+                    return;
+                }
+                tokens.forEach(tok => {
+                    const card = document.createElement('div');
+                    card.className = "p-4 bg-slate-900 border border-gray-800 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4";
+                    card.innerHTML = `
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-sm text-white">${tok.name}</span>
+                                <span class="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded font-bold">${tok.usage_count} Calls</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <code class="text-xs bg-black/50 px-2 py-1 rounded text-emerald-400 font-mono">${tok.token}</code>
+                                <button onclick="navigator.clipboard.writeText('${tok.token}')" class="text-xs text-gray-400 hover:text-white" title="Copy Token">
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 self-start md:self-center">
+                            <button onclick="viewTokenAnalytics('${tok.id}')" class="px-3 py-1.5 text-xs bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/40 border border-emerald-500/30 rounded transition-colors flex items-center gap-1">
+                                Usage Graph
+                            </button>
+                            <button onclick="deleteToken('${tok.id}')" class="px-3 py-1.5 text-xs bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30 rounded transition-colors">
+                                Revoke
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                showToast('Failed to load API tokens', 'error');
+            }
+        }
+
+        async function handleCreateToken(e) {
+            e.preventDefault();
+            const name = document.getElementById('tokName').value;
+
+            try {
+                const res = await fetch('/api/tokens', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': currentPassword
+                    },
+                    body: JSON.stringify({ name })
+                });
+                if (res.ok) {
+                    showToast('API Token generated successfully!');
+                    document.getElementById('createTokenForm').reset();
+                    loadTokens();
+                } else {
+                    const data = await res.json();
+                    showToast(data.message || 'Failed to create token', 'error');
+                }
+            } catch (err) {
+                showToast('Error creating token', 'error');
+            }
+        }
+
+        async function deleteToken(id) {
+            try {
+                const res = await fetch(`/api/tokens/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Password': currentPassword }
+                });
+                if (res.ok) {
+                    showToast('API Token revoked');
+                    loadTokens();
+                } else {
+                    showToast('Failed to revoke token', 'error');
+                }
+            } catch (err) {
+                showToast('Error revoking token', 'error');
+            }
+        }
+
+        let tokenChartInstance = null;
+        async function viewTokenAnalytics(id) {
+            try {
+                const res = await fetch(`/api/tokens/${id}/analytics`, {
+                    headers: { 'X-Admin-Password': currentPassword }
+                });
+                const tok = await res.json();
+                if (!res.ok) { showToast('Token analytics unavailable', 'error'); return; }
+
+                document.getElementById('modalTokenTitle').textContent = `Analytics: ${tok.name}`;
+                document.getElementById('modalTokenCount').textContent = tok.usage_count;
+                document.getElementById('modalTokenKey').textContent = tok.id;
+                document.getElementById('tokenModal').classList.remove('hidden');
+
+                // Generate hourly activity map over last 12 hours
+                const hoursMap = {};
+                const now = new Date();
+                for (let i = 11; i >= 0; i--) {
+                    const d = new Date(now.getTime() - i * 3600 * 1000);
+                    const label = d.getHours() + ':00';
+                    hoursMap[label] = 0;
+                }
+
+                (tok.usage_logs || []).forEach(log => {
+                    const logDate = new Date(log.timestamp * 1000);
+                    const label = logDate.getHours() + ':00';
+                    if (hoursMap[label] !== undefined) hoursMap[label]++;
+                });
+
+                const ctx = document.getElementById('tokenUsageChart').getContext('2d');
+                if (tokenChartInstance) tokenChartInstance.destroy();
+
+                tokenChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(hoursMap),
+                        datasets: [{
+                            label: 'API Invocations',
+                            data: Object.values(hoursMap),
+                            backgroundColor: '#10b981',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: '#9ca3af' } },
+                            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', precision: 0 } }
+                        }
+                    }
+                });
+
+            } catch (e) {
+                showToast('Error loading token analytics', 'error');
+            }
+        }
+
+        function closeTokenModal() {
+            document.getElementById('tokenModal').classList.add('hidden');
+        }
+
+        async function loadBanners() {
+            const container = document.getElementById('bannersContainer');
+            try {
+                const banners = await fetch('/api/banners').then(r => r.json());
+                container.innerHTML = '';
+                if (!Array.isArray(banners) || banners.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-gray-500">No active banners found.</p>';
+                    return;
+                }
+                for (const ban of banners) {
+                    let clicksCount = 0;
+                    try {
+                        const repRes = await fetch(`/api/ads/reports/${ban.report_id}`).then(r => r.json());
+                        clicksCount = repRes.total_clicks || 0;
+                    } catch(e){}
+
+                    const card = document.createElement('div');
+                    card.className = "p-4 bg-slate-900 border border-gray-800 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4";
+                    card.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="w-24 h-12 bg-black/40 border border-gray-800 rounded overflow-hidden flex items-center justify-center p-1">
+                                <img src="${ban.img}" class="max-w-full max-h-full object-contain" />
+                            </div>
+                            <div class="space-y-0.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-sm text-white">${ban.id}</span>
+                                    <span class="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded font-bold">${clicksCount} Clicks</span>
+                                </div>
+                                <a href="${ban.url}" target="_blank" class="text-xs text-blue-400 underline block truncate max-w-xs">${ban.url}</a>
+                                <a href="/ads/reports/${ban.report_id}" target="_blank" class="text-xs text-emerald-400 font-semibold hover:underline flex items-center gap-1 mt-1">
+                                    View Interactive Analytics Report →
+                                </a>
+                            </div>
+                        </div>
+                        <button onclick="deleteBanner('${ban.id}')" class="px-3 py-1.5 text-xs bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30 rounded transition-colors self-start md:self-center">
+                            Delete Banner
+                        </button>
+                    `;
+                    container.appendChild(card);
+                }
+            } catch (err) {
+                showToast('Failed to load banners', 'error');
+            }
+        }
+
+        async function handleAddBanner(e) {
+            e.preventDefault();
+            const img = document.getElementById('banImg').value;
+            const url = document.getElementById('banUrl').value;
+
+            try {
+                const res = await fetch('/api/banners', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': currentPassword
+                    },
+                    body: JSON.stringify({ img, url })
+                });
+                if (res.ok) {
+                    showToast('Banner added successfully!');
+                    document.getElementById('addBannerForm').reset();
+                    loadBanners();
+                } else {
+                    const data = await res.json();
+                    showToast(data.message || 'Failed to add banner', 'error');
+                }
+            } catch (err) {
+                showToast('Error adding banner', 'error');
+            }
+        }
+
+        async function deleteBanner(id) {
+            try {
+                const res = await fetch(`/api/banners/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Password': currentPassword }
+                });
+                if (res.ok) {
+                    showToast('Banner deleted');
+                    loadBanners();
+                } else {
+                    showToast('Failed to delete banner', 'error');
+                }
+            } catch (err) {
+                showToast('Error deleting banner', 'error');
+            }
+        }
+
+        let globalServersData = null;
+
+        function onLayerSelectChange() {
+            const layer = document.getElementById('boomLayer').value;
+            const fieldL4Bps = document.getElementById('fieldL4Bps');
+            const fieldL4Pps = document.getElementById('fieldL4Pps');
+            const fieldL7Rps = document.getElementById('fieldL7Rps');
+
+            if (layer === 'layer7') {
+                fieldL4Bps.classList.add('hidden');
+                fieldL4Pps.classList.add('hidden');
+                fieldL7Rps.classList.remove('hidden');
+            } else {
+                fieldL4Bps.classList.remove('hidden');
+                fieldL4Pps.classList.remove('hidden');
+                fieldL7Rps.classList.add('hidden');
+            }
+            if (globalServersData) populateServerDropdown(globalServersData);
+        }
+
+        function populateServerDropdown(servers) {
+            globalServersData = servers;
+            const selectedLayer = document.getElementById('boomLayer').value || 'layer4';
+            const select = document.getElementById('boomServer');
+            const grid = document.getElementById('serversListGrid');
+            select.innerHTML = '<option value="">-- Select Server --</option>';
+            grid.innerHTML = '';
+
+            const layerCategories = servers[selectedLayer] || {};
+            for (const cat of Object.values(layerCategories)) {
+                for (const [key, srv] of Object.entries(cat.servers || {})) {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = `[${selectedLayer.toUpperCase()}] ${srv.name} (${srv.location}) - ${srv.bandwidth}`;
+                    select.appendChild(opt);
+
+                    const card = document.createElement('div');
+                    card.className = "p-3 bg-slate-900 border border-gray-800 rounded-lg flex items-center justify-between";
+                    card.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <img src="${srv.flag}" class="w-4 h-4 rounded-full" />
+                            <div>
+                                <span class="font-semibold text-sm text-white">${srv.name}</span>
+                                <span class="text-xs text-gray-500 block font-mono">${selectedLayer.toUpperCase()}</span>
+                            </div>
+                        </div>
+                        <button onclick="quickSelectServer('${key}', '${selectedLayer}')" class="text-xs px-2 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/40 rounded transition-colors">Select</button>
+                    `;
+                    grid.appendChild(card);
+                }
+            }
+        }
+
+        function quickSelectServer(key, layer) {
+            document.getElementById('boomLayer').value = layer;
+            onLayerSelectChange();
+            document.getElementById('boomServer').value = key;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function quickSelectServer(key) {
+            document.getElementById('boomServer').value = key;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function handleBoom(e) {
+            e.preventDefault();
+            const layer = document.getElementById('boomLayer').value;
+            const server = document.getElementById('boomServer').value;
+            const format = document.getElementById('boomFormat').value;
+
+            if (!server) {
+                showToast('Please select a target server', 'error');
+                return;
+            }
+
+            let url = `/api/boom/${server}`;
+            let payload = { format: parseInt(format) };
+
+            if (layer === 'layer7') {
+                url = `/api/boom/l7/${server}`;
+                payload.rps = document.getElementById('boomRps').value;
+            } else {
+                payload.bps = document.getElementById('boomBps').value;
+                payload.pps = document.getElementById('boomPps').value;
+            }
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': currentPassword
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(`Boom triggered on [${layer.toUpperCase()}] ${server}! Format: ${format == '1' ? 'Drop (20s zero)' : 'Continuous'}`);
+                } else {
+                    showToast(data.message || 'Boom request failed', 'error');
+                }
+            } catch (err) {
+                showToast('Error triggering boom', 'error');
+            }
+        }
+
+        async function handleReset() {
+            const layer = document.getElementById('boomLayer').value;
+            const server = document.getElementById('boomServer').value;
+
+            let endpoint = '/api/reset';
+            if (layer === 'layer7') {
+                endpoint = server ? `/api/reset/l7/${server}` : '/api/reset/l7';
+            } else {
+                endpoint = server ? `/api/reset/${server}` : '/api/reset';
+            }
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'X-Admin-Password': currentPassword }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(server ? `Reset active for ${server}` : 'Reset performed');
+                } else {
+                    showToast(data.message || 'Reset failed', 'error');
+                }
+            } catch (err) {
+                showToast('Error sending reset', 'error');
+            }
+        }
+
+        async function loadReviews() {
+            const container = document.getElementById('reviewsContainer');
+            try {
+                const reviews = await fetch('/api/reviews').then(r => r.json());
+                container.innerHTML = '';
+                reviews.forEach(rev => {
+                    const card = document.createElement('div');
+                    card.className = "p-4 bg-slate-900 border border-gray-800 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4";
+                    card.innerHTML = `
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-base text-white">${rev.name}</span>
+                                <span class="text-xs px-2 py-0.5 rounded font-bold uppercase ${
+                                    rev.status === 'leader' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                    rev.status === 'scam' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                                    'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                }">${rev.status}</span>
+                            </div>
+                            <div class="text-xs text-gray-400">${rev.description}</div>
+                            <a href="${rev.url}" target="_blank" class="text-xs text-blue-400 underline">${rev.url}</a>
+                            <div class="text-xs text-gray-300 flex gap-4 pt-1">
+                                <span>L4: ${'★'.repeat(rev.layer4)}${'☆'.repeat(5-rev.layer4)}</span>
+                                <span>L7: ${'★'.repeat(rev.layer7)}${'☆'.repeat(5-rev.layer7)}</span>
+                            </div>
+                        </div>
+                        <button onclick="deleteReview('${rev.id}')" class="px-3 py-1.5 text-xs bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30 rounded transition-colors self-start md:self-center">
+                            Delete
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                showToast('Failed to load reviews', 'error');
+            }
+        }
+
+        async function handleAddReview(e) {
+            e.preventDefault();
+            const name = document.getElementById('revName').value;
+            const url = document.getElementById('revUrl').value;
+            const status = document.getElementById('revStatus').value;
+            const layer4 = document.getElementById('revL4').value;
+            const layer7 = document.getElementById('revL7').value;
+            const description = document.getElementById('revDesc').value;
+
+            try {
+                const res = await fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': currentPassword
+                    },
+                    body: JSON.stringify({ name, url, status, layer4, layer7, description })
+                });
+                if (res.ok) {
+                    showToast('Review added successfully!');
+                    document.getElementById('addReviewForm').reset();
+                    loadReviews();
+                } else {
+                    const data = await res.json();
+                    showToast(data.message || 'Failed to add review', 'error');
+                }
+            } catch (err) {
+                showToast('Error adding review', 'error');
+            }
+        }
+
+        async function deleteReview(id) {
+            try {
+                const res = await fetch(`/api/reviews/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Password': currentPassword }
+                });
+                if (res.ok) {
+                    showToast('Review deleted');
+                    loadReviews();
+                } else {
+                    showToast('Failed to delete review', 'error');
+                }
+            } catch (err) {
+                showToast('Error deleting review', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
